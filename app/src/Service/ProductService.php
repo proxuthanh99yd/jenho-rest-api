@@ -335,7 +335,7 @@ class ProductService
             'regular_price' => $variation['display_regular_price'],
             'stock' => $variation['max_qty'],
             'in_stock' => $variation['is_in_stock'],
-            'attributes' => $attributes,
+            'attributes' => array_values($attributes),
             'image' => [
                 'title' => $variation['image']['title'],
                 'caption' => $variation['image']['caption'],
