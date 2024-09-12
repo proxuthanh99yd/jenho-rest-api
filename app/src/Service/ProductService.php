@@ -298,7 +298,7 @@ class ProductService
         return $product->get_regular_price();
     }
 
-    public function getVariationById(WC_Product | int $product, int $variation_id)
+    public function getVariationById(int $product, int $variation_id)
     {
         if (is_int($product)) $product = wc_get_product($product);
 
