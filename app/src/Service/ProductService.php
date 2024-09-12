@@ -169,6 +169,7 @@ class ProductService
         $response = array(
             'id' => $product->get_id(),
             'name' => $product->get_name(),
+            'slug' => $product->get_slug(),
             'price' => intval($this->getPrice($product->get_id())),
             'regular_price' => intval($this->getRegularPrice($product->get_id())),
             'descriptions' => get_field('product_details', $product->get_id()),
