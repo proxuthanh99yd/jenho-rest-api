@@ -294,11 +294,9 @@ class OrderService
         // Format and return order data
         $items = [];
         foreach ($order->get_items() as $item) {
-            $product = $item->get_product();
             $items[] = array(
-                'product' => $this->productService->getProduct($product->get_id()), // Product ID
-                'variation' => $this->productService->getVariationById($product->get_id(), $item->get_variation_id()), // Variation ID if applicable
-                // 'product_name' => $product ? $product->get_name() : __('Product not found'), // Product name or error message
+                'product' => $this->productService->getProduct($item->get_product_id()), // Product ID
+                'variation' => $this->productService->getVariationById($item->get_product_id(), $item->get_variation_id()), // Variation ID if applicable
                 'quantity' => $item->get_quantity(), // Quantity ordered
                 'subtotal' => $item->get_subtotal(), // Item subtotal
                 'total' => $item->get_total(), // Item total
