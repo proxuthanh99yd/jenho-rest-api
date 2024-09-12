@@ -303,39 +303,59 @@ class OrderService
             );
         }
 
-        // Assuming $order is your WooCommerce order object
-        $shipping_info = [
-            'first_name'   => $order->shipping_first_name,
-            'last_name'    => $order->shipping_last_name,
-            'company'      => $order->shipping_company,
-            'address_1'    => $order->shipping_address_1,
-            'address_2'    => $order->shipping_address_2,
-            'city'         => $order->shipping_city,
-            'state'        => $order->shipping_state,
-            'postcode'     => $order->shipping_postcode,
-            'country'      => $order->shipping_country
-        ];
-
-        $billing_info = [
-            'first_name'   => $order->billing_first_name,
-            'last_name'    => $order->billing_last_name,
-            'company'      => $order->billing_company,
-            'address_1'    => $order->billing_address_1,
-            'address_2'    => $order->billing_address_2,
-            'city'         => $order->billing_city,
-            'state'        => $order->billing_state,
-            'postcode'     => $order->billing_postcode,
-            'country'      => $order->billing_country
+        $order_info = [
+            'customer_id'                  => $order->get_customer_id(),
+            'user_id'                      => $order->get_user_id(),
+            'user'                         => $order->get_user(),
+            'customer_ip_address'          => $order->get_customer_ip_address(),
+            'customer_user_agent'          => $order->get_customer_user_agent(),
+            'created_via'                  => $order->get_created_via(),
+            'customer_note'                => $order->get_customer_note(),
+            'address_prop'                 => $order->get_address_prop(), // This requires more info on what $prop is
+            'billing' => [
+                'first_name'               => $order->get_billing_first_name(),
+                'last_name'                => $order->get_billing_last_name(),
+                'company'                  => $order->get_billing_company(),
+                'address_1'                => $order->get_billing_address_1(),
+                'address_2'                => $order->get_billing_address_2(),
+                'city'                     => $order->get_billing_city(),
+                'state'                    => $order->get_billing_state(),
+                'postcode'                 => $order->get_billing_postcode(),
+                'country'                  => $order->get_billing_country(),
+                'email'                    => $order->get_billing_email(),
+                'phone'                    => $order->get_billing_phone(),
+                'formatted_full_name'      => $order->get_formatted_billing_full_name(),
+                'formatted_address'        => $order->get_formatted_billing_address(),
+            ],
+            'shipping' => [
+                'first_name'               => $order->get_shipping_first_name(),
+                'last_name'                => $order->get_shipping_last_name(),
+                'company'                  => $order->get_shipping_company(),
+                'address_1'                => $order->get_shipping_address_1(),
+                'address_2'                => $order->get_shipping_address_2(),
+                'city'                     => $order->get_shipping_city(),
+                'state'                    => $order->get_shipping_state(),
+                'postcode'                 => $order->get_shipping_postcode(),
+                'country'                  => $order->get_shipping_country(),
+                'address_map_url'          => $order->get_shipping_address_map_url(),
+                'formatted_full_name'      => $order->get_formatted_shipping_full_name(),
+                'formatted_address'        => $order->get_formatted_shipping_address(),
+            ],
+            'payment' => [
+                'method'                   => $order->get_payment_method(),
+                'method_title'             => $order->get_payment_method_title(),
+                'transaction_id'           => $order->get_transaction_id(),
+            ]
         ];
 
         return array(
             'id' => $order->get_id(), // Order ID
             'status' => $order->get_status(), // Order status
             'total' => $order->get_total(), // Order total amount
+            'subtotal' => $order->get_subtotal(), // Order subtotal
             'date_created' => $order->get_date_created()->date('Y-m-d H:i:s'), // Order creation date
             'items' => $items, // Iterate over each item in the order
-            'shipping' => $shipping_info,
-            'billing'  => $billing_info
+            'order_info' => $order_info
         );
     }
 
