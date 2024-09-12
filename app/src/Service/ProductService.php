@@ -1,0 +1,353 @@
+<?php
+
+namespace Okhub\Service;
+
+use ArrayAccess;
+use WC_Product;
+use WP_Error;
+
+class ProductService
+{
+    /**
+     * Retrieves a list of products based on given arguments.
+     *
+     * @param array $args The arguments to filter products, such as 'limit', 'page', 'sizes', 'colors', and 'price_range'.
+     * @return array Returns an array containing product data, pagination details, and total pages.
+     */
+    public function getProducts($args = [])
+    {
+        // Set default query parameters for fetching products
+        $defaults = array(
+            'post_type' => 'product',
+            'post_status' => 'publish',
+            'posts_per_page' => $args['limit'] ?? 10, // Number of products per page
+            'paged' => $args['page'] ?? 1, // Current page number
+            'tax_query' => array(), // Taxonomy query array
+            'orderby' => 'meta_value_num', // Order by a meta value (numeric)
+            'order' => 'ASC', // Order direction (ascending)
+        );
+
+        // Handling size and color filters for products using taxonomies
+        if (!empty($args['sizes']) || !empty($args['colors'])) {
+            $taxQuery = [];
+            if (!empty($args['sizes'])) {
+                $taxQuery[] = [
+                    'taxonomy' => 'pa_size', // Product attribute for size
+                    'field' => 'slug', // Field to match (slug in this case)
+                    'terms' => $args['sizes'], // Terms to filter
+                ];
+            }
+            if (!empty($args['colors'])) {
+                $taxQuery[] = [
+                    'taxonomy' => 'pa_color', // Product attribute for color
+                    'field' => 'slug',
+                    'terms' => $args['colors'],
+                ];
+            }
+            if (count($taxQuery) > 1) {
+                array_unshift($taxQuery, ['relation' => 'AND']); // Combine queries with 'AND' relation
+            }
+            $defaults['tax_query'] = $taxQuery;
+        }
+
+        // Add price range filter if specified
+        $defaults = $this->handle_price_range_query_var($defaults, $args);
+
+        $products = array(
+            'data' => array() // Initialize data array to store products
+        );
+
+        // Execute the query with WP_Query
+        $query = new \WP_Query($defaults);
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $product = wc_get_product(get_the_ID());
+                $products['data'][] = array(
+                    'id' => $product->get_id(),
+                    'name' => $product->get_name(),
+                    'slug' => $product->get_slug(),
+                    'price' => intval($this->getPrice($product->get_id())),
+                    'regular_price' => intval($this->getRegularPrice($product->get_id())),
+                    'image' => wp_get_attachment_url($product->get_image_id()),
+                    'video' => $this->getVideo($product->get_id()),
+                    'variations' => $this->getVariations($product),
+                );
+            }
+        }
+
+        // Reset post data after query execution
+        wp_reset_postdata();
+
+        // Set pagination details
+        $products['page'] = intval($query->query_vars['paged']);
+        $products['totalPages'] = intval($query->max_num_pages);
+        $products['limit'] = intval($query->query_vars['posts_per_page']);
+        return $products;
+    }
+
+    /**
+     * Adds a price range filter to the query if specified.
+     *
+     * @param array $query The existing query parameters.
+     * @param array $query_vars The input arguments, which may include 'price_range'.
+     * @return array The modified query parameters with a price range filter if applicable.
+     */
+    function handle_price_range_query_var($query, $query_vars)
+    {
+        // Check if price range is specified and correctly formatted
+        if (!empty($query_vars['price_range'])) {
+            $price_range = $query_vars['price_range'];
+            if (is_array($price_range) && count($price_range) == 2) {
+                $query['meta_query'][] = array(
+                    'key' => '_price', // Meta key for product price
+                    'value' => array(reset($price_range), end($price_range)), // Price range values
+                    'compare' => 'BETWEEN', // Compare prices within the specified range
+                    'type' => 'NUMERIC' // Treat values as numeric
+                );
+            }
+        }
+        return $query;
+    }
+
+    /**
+     * Retrieves a single product by its ID.
+     *
+     * @param int $productId The ID of the product to retrieve.
+     * @return array|WP_Error Returns formatted product data or an error if not found.
+     */
+    public function getProduct($productId)
+    {
+        $product = wc_get_product($productId);
+
+        if (!$product) {
+            return new WP_Error('product_not_found', __('Product not found'), array('status' => 404));
+        }
+
+        return $this->formatSingleProduct($product);
+    }
+
+    /**
+     * Retrieves a single product by its slug or SKU.
+     *
+     * @param string $slug The slug or SKU of the product.
+     * @return array|WP_Error Returns formatted product data or an error if not found.
+     */
+    public function getProductBySlug($slug)
+    {
+        // Fetch product ID by SKU first
+        $product_id = wc_get_product_id_by_sku($slug);
+        if (!$product_id) {
+            // If not found by SKU, try fetching by slug
+            $product = get_page_by_path($slug, OBJECT, 'product');
+            if ($product) {
+                $product_id = $product->ID;
+            }
+        }
+
+        if (!$product_id) {
+            return new WP_Error('product_not_found', __('Product not found'), array('status' => 404));
+        }
+
+        $product = wc_get_product($product_id);
+
+        if (!$product) {
+            return new WP_Error('product_not_found', __('Product not found'), array('status' => 404));
+        }
+
+        return $this->formatSingleProduct($product);
+    }
+
+    /**
+     * Formats a single product object into a detailed array.
+     *
+     * @param WC_Product $product The product object to format.
+     * @return array The formatted product data.
+     */
+    private function formatSingleProduct(WC_Product $product)
+    {
+        $response = array(
+            'id' => $product->get_id(),
+            'name' => $product->get_name(),
+            'price' => intval($this->getPrice($product->get_id())),
+            'regular_price' => intval($this->getRegularPrice($product->get_id())),
+            'descriptions' => get_field('product_details', $product->get_id()),
+            'sku' => $product->get_sku(),
+            'stock_status' => $product->get_stock_status(),
+            'image' => wp_get_attachment_url($product->get_image_id()),
+            'video' => $this->getVideo($product->get_id()),
+            'categories' => wp_get_post_terms($product->get_id(), 'product_cat', array('fields' => 'names')),
+            'variations' => $this->getVariations($product),
+        );
+
+        return $response;
+    }
+
+    /**
+     * Retrieves video data related to a product based on custom meta fields.
+     *
+     * @param int $productId The ID of the product.
+     * @return array The formatted video data.
+     */
+    private function getVideo($productId)
+    {
+        // Fetch various meta fields related to product videos
+        $afpv_enable_featured_video = get_post_meta(intval($productId), 'afpv_enable_featured_video', true);
+        $afpv_enable_featured_video_shop_page = get_post_meta(intval($productId), 'afpv_enable_featured_video_shop_page', true);
+        $afpv_enable_featured_video_product_page = get_post_meta(intval($productId), 'afpv_enable_featured_video_product_page', true);
+        $afpv_enable_featured_image_as_first_img = get_post_meta(intval($productId), 'afpv_enable_featured_image_as_first_img', true);
+        $afpv_featured_video_type = get_post_meta(intval($productId), 'afpv_featured_video_type', true);
+        $afpv_yt_featured_video_id = get_post_meta(intval($productId), 'afpv_yt_featured_video_id', true);
+        $afpv_fb_featured_video_id = get_post_meta(intval($productId), 'afpv_fb_featured_video_id', true);
+        $afpv_dm_featured_video_id = get_post_meta(intval($productId), 'afpv_dm_featured_video_id', true);
+        $afpv_vm_featured_video_id = get_post_meta(intval($productId), 'afpv_vm_featured_video_id', true);
+        $afpv_mc_featured_video_id = get_post_meta(intval($productId), 'afpv_mc_featured_video_id', true);
+        $afpv_cus_featured_video_id = get_post_meta(intval($productId), 'afpv_cus_featured_video_id', true);
+        $afpv_video_thumb = get_post_meta(intval($productId), 'afpv_video_thumb', true);
+
+        // Format and return the video data
+        $formattedVideo = [
+            'is_featured_video' => $afpv_enable_featured_video,
+            'is_featured_video_product_page' => $afpv_enable_featured_video_product_page,
+            'is_featured_video_shop_page' => $afpv_enable_featured_video_shop_page,
+            'video_type' => $afpv_featured_video_type,
+            'youtube' => $afpv_yt_featured_video_id,
+            'facebook' => $afpv_fb_featured_video_id,
+            'dailymotion' => $afpv_dm_featured_video_id,
+            'vimeo' => $afpv_vm_featured_video_id,
+            'metacafe' => $afpv_mc_featured_video_id,
+            'custom' => $afpv_cus_featured_video_id,
+            'videoThumb' => $afpv_video_thumb
+        ];
+        return $formattedVideo;
+    }
+
+    /**
+     * Retrieves variations of a variable product and formats them into an array.
+     *
+     * @param WC_Product $product The variable product object.
+     * @return array An array of formatted product variations.
+     */
+    private function getVariations($product)
+    {
+        // Check if the product is of type 'variable'
+        if (!$product->is_type('variable')) return [];
+
+        $formattedVariations = [];
+        $variations = $product->get_available_variations();
+        // Loop through each variation and format its data
+        foreach ($variations as $variation) {
+            // Add the formatted variation to the list
+            $formattedVariations[] = $this->formatVariation($variation);
+        }
+
+        return $formattedVariations;
+    }
+
+    /**
+     * Retrieves additional images for a product variation based on meta data.
+     *
+     * @param int $variation_id The ID of the variation.
+     * @return array An array of URLs for additional images.
+     */
+    private function getVariationImages($variation_id)
+    {
+        $formattedVariationImage = [];
+        // Fetch additional variation images from post meta
+        $strMediaIds = get_post_meta($variation_id, '_wc_additional_variation_images', true);
+        $arrMediaIds = explode(',', $strMediaIds);
+
+        // Loop through each image ID and get the attachment URL
+        foreach ($arrMediaIds as $mediaId) {
+            $image = wp_get_attachment_url($mediaId);
+            if ($image) $formattedVariationImage[] = $image;
+        }
+        return $formattedVariationImage;
+    }
+
+    private function getPrice($product_id)
+    {
+        $product = wc_get_product($product_id);
+        if ($product->is_type('variable')) {
+            $variations = $product->get_available_variations();
+
+            // Loop through each variation and format its data
+            foreach ($variations as $variation) {
+                if ($variation['display_price']) {
+                    return $variation['display_price'];
+                }
+                // return $variation;
+            }
+        }
+        return $product->get_price();
+    }
+
+    private function getRegularPrice($product_id)
+    {
+        $product = wc_get_product($product_id);
+        if ($product->is_type('variable')) {
+            $variations = $product->get_available_variations();
+            // Loop through each variation and format its data
+            foreach ($variations as $variation) {
+                if ($variation['display_regular_price']) {
+                    return $variation['display_regular_price'];
+                }
+                // return $variation;
+            }
+        }
+        return $product->get_regular_price();
+    }
+
+    public function getVariationById(WC_Product | int $product, int $variation_id)
+    {
+        if (is_int($product)) $product = wc_get_product($product);
+
+        // Check if the product is of type 'variable'
+        if (!$product->is_type('variable')) return null;
+        $variations = $product->get_available_variations();
+        // Loop through each variation and format its data
+        foreach ($variations as $variation) {
+            if ($variation['variation_id'] == $variation_id) {
+                return $this->formatVariation($variation);
+            }
+        }
+        return null;
+    }
+
+    private function formatVariation($variation)
+    {
+        $attributes = [];
+
+        // Format the attributes of each variation
+        foreach ($variation['attributes'] as $key => $value) {
+            $term = get_term_by('slug', $value, str_replace('attribute_', '', $key), 'ARRAY_A');
+            if ($term) {
+                // Add hex color code for color attributes
+                if ($term['taxonomy'] === 'pa_color') {
+                    $term['hex_color'] = get_field('color_hex_color_codes', $term['taxonomy'] . '_' . $term['term_id']);
+                }
+                // Remove unnecessary fields from the term data
+                unset($term["term_group"], $term["description"], $term["parent"], $term["count"], $term["filter"]);
+                $attributes[] = $term;
+            }
+        }
+
+        // Format the variation data
+        return [
+            'id' => $variation['variation_id'],
+            'name' => $variation['display_regular_price'],
+            'price' => $variation['display_price'],
+            'regular_price' => $variation['display_regular_price'],
+            'stock' => $variation['max_qty'],
+            'in_stock' => $variation['is_in_stock'],
+            'attributes' => $variation['attributes'],
+            'image' => [
+                'title' => $variation['image']['title'],
+                'caption' => $variation['image']['caption'],
+                'alt' => $variation['image']['alt'],
+                'src' => $variation['image']['url'],
+            ],
+            'additional_images' => $this->getVariationImages($variation['variation_id']),
+        ];
+    }
+}

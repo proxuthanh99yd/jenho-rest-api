@@ -1,0 +1,14 @@
+{
+    "name": "okhub/rest-api-theme",
+    "description": "REST API Theme",
+    "type": "wordpress-theme",
+    "autoload": {
+        "psr-4": {
+            "Okhub\\": "app/src/"
+        }
+    },
+    "require": {
+        "firebase/php-jwt": "^6.9.0",
+        "google/apiclient": "^2.16"
+    }
+}
