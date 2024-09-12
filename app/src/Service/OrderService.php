@@ -7,12 +7,14 @@ use WC_Order;
 use WC_Product;
 use WC_Order_Item_Fee;
 use Okhub\Service\CartService;
+use Okhub\Service\ProductService;
 use Okhub\Service\CouponService; // Include the CouponService
 
 class OrderService
 {
     private static $instance = null;
     private $cartService;  // Handles cart-related operations
+    private $productService;  // Handles product-related operations
     private $couponService; // Handles coupon-related operations
     private $woocommerce;  // WooCommerce instance
     private $delay_minutes = 0.1; // Email delay time in minutes
@@ -22,9 +24,10 @@ class OrderService
      *
      * @param CartService $cartService The service handling cart operations.
      * @param CouponService $couponService The service handling coupon operations.
+     * @param ProductService $productService The service handling product operations.
      * @param int $delay_minutes The delay in minutes before sending order emails.
      */
-    public function __construct(CartService $cartService, CouponService $couponService)
+    public function __construct(CartService $cartService, CouponService $couponService, ProductService $productService)
     {
         $this->cartService = $cartService;
         $this->couponService = $couponService; // Initialize CouponService
@@ -32,10 +35,10 @@ class OrderService
     }
 
     // Singleton instance getter
-    public static function getInstance(CartService $cartService, CouponService $couponService)
+    public static function getInstance(CartService $cartService, CouponService $couponService, ProductService $productService)
     {
         if (self::$instance === null) {
-            self::$instance = new self($cartService, $couponService);
+            self::$instance = new self($cartService, $couponService, $productService);
         }
         return self::$instance;
     }
@@ -292,9 +295,9 @@ class OrderService
         foreach ($order->get_items() as $item) {
             $product = $item->get_product();
             $items[] = array(
-                'product_id' => $item->get_product_id(), // Product ID
-                'variation_id' => $item->get_variation_id(), // Variation ID if applicable
-                'product_name' => $product ? $product->get_name() : __('Product not found'), // Product name or error message
+                'product' => $this->productService->getProduct($product->get_id()), // Product ID
+                'variation' => $this->productService->getVariationById($product->get_id(), $item->get_variation_id()), // Variation ID if applicable
+                // 'product_name' => $product ? $product->get_name() : __('Product not found'), // Product name or error message
                 'quantity' => $item->get_quantity(), // Quantity ordered
                 'subtotal' => $item->get_subtotal(), // Item subtotal
                 'total' => $item->get_total(), // Item total
@@ -305,7 +308,9 @@ class OrderService
             'status' => $order->get_status(), // Order status
             'total' => $order->get_total(), // Order total amount
             'date_created' => $order->get_date_created()->date('Y-m-d H:i:s'), // Order creation date
-            'items' => $items // Iterate over each item in the order
+            'items' => $items, // Iterate over each item in the order
+            'billing_address' => $order->get_billing_address(), // Billing address,
+            'shipping_address' => $order->get_shipping_address(), // Shipping address
         );
     }
 
