@@ -45,8 +45,8 @@ class TokenHandler
         return array(
             'bearerToken' => $bearerToken,
             'refreshToken' => $refreshToken,
-            'refreshTokenExpiry' => $this->refreshTokenExpiry,
-            'bearerTokenExpiry' => $this->bearerTokenExpiry
+            'refreshTokenExpiry' => time($issuedAt + $this->refreshTokenExpiry),
+            'bearerTokenExpiry' =>  time($issuedAt +  $this->bearerTokenExpiry)
         );
     }
 
