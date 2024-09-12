@@ -447,7 +447,7 @@ class CartService
         if ($variation_id) {
             return array_merge($data, array(
                 'product' => $this->productService->getProduct($product->get_id()),
-                'variation' => $this->productService->getVariationById($product, $variation_id),
+                'variation' => $this->productService->getVariationById($product->get_id(), $variation_id),
             ));
         } else {
             return array_merge($data, array(
