@@ -24,7 +24,7 @@ add_action('woocommerce_init', function () {
     // Create a global instance of OrderService
     function okhub_order_service($arg)
     {
-        return \Okhub\Service\OrderService::getInstance(new \Okhub\Service\CartService($arg['productService']), new \Okhub\Service\CouponService());
+        return \Okhub\Service\OrderService::getInstance(new \Okhub\Service\CartService($arg['productService']), new \Okhub\Service\CouponService(), new \Okhub\Service\ProductService());
     }
 
     // Hook into WordPress's cron system using the global instance
