@@ -304,14 +304,40 @@ class OrderService
                 'total' => $item->get_total(), // Item total
             );
         }
+
+        // Assuming $order is your WooCommerce order object
+        $shipping_info = [
+            'first_name'   => $order->shipping_first_name,
+            'last_name'    => $order->shipping_last_name,
+            'company'      => $order->shipping_company,
+            'address_1'    => $order->shipping_address_1,
+            'address_2'    => $order->shipping_address_2,
+            'city'         => $order->shipping_city,
+            'state'        => $order->shipping_state,
+            'postcode'     => $order->shipping_postcode,
+            'country'      => $order->shipping_country
+        ];
+
+        $billing_info = [
+            'first_name'   => $order->billing_first_name,
+            'last_name'    => $order->billing_last_name,
+            'company'      => $order->billing_company,
+            'address_1'    => $order->billing_address_1,
+            'address_2'    => $order->billing_address_2,
+            'city'         => $order->billing_city,
+            'state'        => $order->billing_state,
+            'postcode'     => $order->billing_postcode,
+            'country'      => $order->billing_country
+        ];
+
         return array(
             'id' => $order->get_id(), // Order ID
             'status' => $order->get_status(), // Order status
             'total' => $order->get_total(), // Order total amount
             'date_created' => $order->get_date_created()->date('Y-m-d H:i:s'), // Order creation date
             'items' => $items, // Iterate over each item in the order
-            'billing_address' => $order->get_billing_address(), // Billing address,
-            'shipping_address' => $order->get_shipping_address(), // Shipping address
+            'shipping' => $shipping_info,
+            'billing'  => $billing_info
         );
     }
 
