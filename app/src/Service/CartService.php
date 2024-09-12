@@ -91,7 +91,8 @@ class CartService
 
                 $cart_data['cart'][$key]['quantity'] += $quantity;
                 update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
-                return $this->cartFormatData($cart_data['cart'][$key], $product, $variation_id);
+                return $this->formatData($cart_data['cart'][$key], $product, $variation_id)[$product->get_type()]();
+                // return $this->cartFormatData($cart_data['cart'][$key], $product, $variation_id);
             }
         }
 
@@ -105,8 +106,8 @@ class CartService
         ];
 
         update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
-
-        return $this->cartFormatData($cart_data['cart'][$cart_item_key], $product, $variation_id);
+        return $this->formatData($cart_data['cart'][$cart_item_key], $product, $variation_id)[$product->get_type()]();
+        // return $this->cartFormatData($cart_data['cart'][$cart_item_key], $product, $variation_id);
     }
 
 
@@ -161,7 +162,8 @@ class CartService
         update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
 
         // Return the updated cart item data
-        return $this->cartFormatData($cart_item, $product, $cart_item['variation_id']);
+        // return $this->cartFormatData($cart_item, $product, $cart_item['variation_id']);
+        return $this->formatData($cart_item, $product, $variation_id)[$product->get_type()]();
     }
 
 
@@ -187,7 +189,8 @@ class CartService
             if ($val['product_id'] == $productId && $val['customize']['color'] == $customize['color']) {
                 $cart_data['cart'][$key]['quantity'] += $quantity;
                 update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
-                return $this->cartFormatData($cart_data['cart'][$key], $product);
+                return $this->formatData($cart_data['cart'][$key], $product)[$product->get_type()]();
+                // return $this->cartFormatData($cart_data['cart'][$key], $product);
             }
         }
 
@@ -204,6 +207,7 @@ class CartService
         update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
 
         return $this->cartFormatData($cart_data['cart'][$cart_item_key], $product);
+        return $this->formatData($cart_data['cart'][$cart_item_key], $product)[$product->get_type()]();
     }
 
     /**
@@ -266,9 +270,10 @@ class CartService
             if (!$product) {
                 return null;
             }
-            $variation_id = $cart_item['variation_id'] ?? null;
-            $formatted_item = $this->cartFormatData($cart_item, $product, $variation_id);
 
+            $variation_id = $cart_item['variation_id'] ?? null;
+            $formatted_item = $this->formatData($cart_item, $product, $variation_id)[$product->get_type()]();
+            // $formatted_item = $this->cartFormatData($cart_item, $product, $variation_id);
             // Assuming created_at is stored in $cart_item or needs to be fetched in some way
             $formatted_item['created_at'] = $cart_item['created_at'] ?? null;
 
@@ -399,7 +404,7 @@ class CartService
         return $this->formatData([], $product, $variation_id)[$product->get_type()]();
     }
 
-    private function formatData($data, $product, $variation_id)
+    private function formatData($data, $product, $variation_id = null)
     {
         unset($data['line_tax_data']);
         unset($data['line_subtotal']);
