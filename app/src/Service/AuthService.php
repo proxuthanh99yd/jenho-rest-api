@@ -10,13 +10,15 @@ use WP_REST_Request;
 class AuthService
 {
     private $tokenHandler;
-
+    private $secretKey = AUTH_SECRET_KEY;
+    private $googleClientId = GOOGLE_CLIENT_ID;
+    private $googleClientSecret = GOOGLE_CLIENT_SECRET;
     /**
      * Constructor initializes the TokenHandler with a secret key.
      */
     public function __construct()
     {
-        $secretKey = 'your-secret-key'; // Replace with your actual secret key
+        $secretKey = $this->secretKey; // Replace with your actual secret key
         $this->tokenHandler = new TokenHandler($secretKey);
     }
 
@@ -172,8 +174,8 @@ class AuthService
     {
         // Initialize the Google Client
         $client = new GoogleClient();
-        $client->setClientId('');
-        $client->setClientSecret('');
+        $client->setClientId($this->googleClientId);
+        $client->setClientSecret($this->googleClientSecret);
         $client->setRedirectUri(site_url('/wp-json/api/v1/google-callback/'));
 
         // Attempt to fetch the access token using the provided authorization code
