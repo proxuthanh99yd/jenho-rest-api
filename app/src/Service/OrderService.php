@@ -311,7 +311,6 @@ class OrderService
             'customer_user_agent'          => $order->get_customer_user_agent(),
             'created_via'                  => $order->get_created_via(),
             'customer_note'                => $order->get_customer_note(),
-            'address_prop'                 => $order->get_address_prop(), // This requires more info on what $prop is
             'billing' => [
                 'first_name'               => $order->get_billing_first_name(),
                 'last_name'                => $order->get_billing_last_name(),
