@@ -46,7 +46,7 @@ class TokenHandler
             'bearerToken' => $bearerToken,
             'refreshToken' => $refreshToken,
             'refreshPayload' => $refreshPayload,
-            'payload' => $payload
+            'bearerPayload' => $payload
         );
     }
 
