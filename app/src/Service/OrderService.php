@@ -31,6 +31,7 @@ class OrderService
     {
         $this->cartService = $cartService;
         $this->couponService = $couponService; // Initialize CouponService
+        $this->productService = $productService;
         $this->woocommerce = WC(); // Initialize WooCommerce instance
     }
 
