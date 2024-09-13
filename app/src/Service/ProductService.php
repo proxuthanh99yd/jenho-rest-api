@@ -382,7 +382,12 @@ class ProductService
 
         // Check if terms are found and there are no errors
         if (!is_wp_error($terms) && !empty($terms)) {
-            return $terms; // Return an array of WP_Term objects representing categories
+            foreach ($terms as $term) {
+                $key = array_search($term->slug, $this->currency);
+                if ($key) {
+                    return $key;
+                }
+            }
         }
 
         // Return false if no categories are found or an error occurs
