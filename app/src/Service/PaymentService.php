@@ -2,6 +2,7 @@
 
 namespace Okhub\Service;
 
+use Okhub\Service\ProductService;
 use WP_REST_Request;
 
 class PaymentService
@@ -12,10 +13,13 @@ class PaymentService
     private $transactionType = "SALE";
     private $pymtMethod = "CC";
     private $merchantReturnUrl = "https://jenho.cms.okhub-tech.com/return";
-    private $currencyCode = "USD";
+    private $currencyCode = "MYR";
 
     public function getPaymentGateway(WP_REST_Request $request, $custIp)
     {
+        if ($request->get_param('currency')) {
+            $this->currencyCode = $request->get_param('currency');
+        }
         $timestamp = time() * 1000;
         $orderId = $request->get_param('OrderNumber');
         $order = wc_get_order($orderId);
