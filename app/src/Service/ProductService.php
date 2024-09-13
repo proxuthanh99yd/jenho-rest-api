@@ -34,7 +34,7 @@ class ProductService
         );
 
         // Handling size and color filters for products using taxonomies
-        if (!empty($args['sizes']) || !empty($args['colors']) || !$args['currency']) {
+        if (!empty($args['sizes']) || !empty($args['colors']) || $args['currency']) {
             $taxQuery = [];
             if (!empty($args['sizes'])) {
                 $taxQuery[] = [
