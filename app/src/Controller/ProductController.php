@@ -34,18 +34,18 @@ class ProductController
             'methods' => 'GET',
             'callback' => array($this, 'getProduct'),
             'permission_callback' => '__return_true', // No authentication required
-            'args' => [
-                'currency' => [
-                    'validate_callback' => array(Validator::class, 'validate_currency'), // Validation for currency
-                ],
-            ]
         ));
 
         // Route to get a list of products with optional filters
         register_rest_route('api/v1', 'products', array(
             'methods' => 'GET',
             'callback' => array($this, 'getProducts'),
-            'permission_callback' => '__return_true' // No authentication required
+            'permission_callback' => '__return_true', // No authentication required
+            'args' => [
+                'currency' => [
+                    'validate_callback' => array(Validator::class, 'validate_currency'), // Validation for currency
+                ],
+            ]
         ));
 
         // Route to get a single product by slug
@@ -89,6 +89,7 @@ class ProductController
     {
         // Set up arguments for the product query with default values
         $args = array(
+            'currency' => $request->get_param('currency') ?: null, // Currency to display prices in
             'limit' => $request->get_param('limit') ?: 10, // Number of products per page
             'page' => $request->get_param('page') ?: 1, // Current page number
         );

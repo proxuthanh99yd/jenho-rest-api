@@ -8,6 +8,12 @@ use WP_Error;
 
 class ProductService
 {
+
+    private $currency = [
+        // 'USD' => '$',
+        'MYR' => 'malaysia-stock',
+        'VND' => 'viet-nam-ho-chi-minh',
+    ];
     /**
      * Retrieves a list of products based on given arguments.
      *
@@ -28,7 +34,7 @@ class ProductService
         );
 
         // Handling size and color filters for products using taxonomies
-        if (!empty($args['sizes']) || !empty($args['colors'])) {
+        if (!empty($args['sizes']) || !empty($args['colors']) || !$args['currency']) {
             $taxQuery = [];
             if (!empty($args['sizes'])) {
                 $taxQuery[] = [
@@ -44,6 +50,16 @@ class ProductService
                     'terms' => $args['colors'],
                 ];
             }
+
+            // Add currency filter if specified
+            if ($args['currency'] && array_key_exists($args['currency'], $this->currency)) {
+                $taxQuery[] = [
+                    'taxonomy' => 'product_cat',
+                    'field' => 'slug',
+                    'terms' => [$this->currency[$args['currency']]],
+                ];
+            }
+
             if (count($taxQuery) > 1) {
                 array_unshift($taxQuery, ['relation' => 'AND']); // Combine queries with 'AND' relation
             }

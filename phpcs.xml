@@ -1,0 +1,4 @@
+<ruleset name="Custom WooCommerce Rules">
+    <rule ref="WordPress"/>
+    <exclude-pattern>*/woocommerce/*</exclude-pattern>
+</ruleset>
