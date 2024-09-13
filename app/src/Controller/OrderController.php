@@ -145,6 +145,7 @@ class OrderController
                             "product_id" => $cart['product_id'],
                             "quantity" => $cart['quantity'],
                             "variation_id" => $cart['variation_id'],
+                            "customize" => $cart['customize'],
                         ];
                     } else {
                         return new WP_Error('invalid_item', __('Invalid item ID: ' . $item), array('status' => 400));
@@ -161,12 +162,12 @@ class OrderController
 
             // Create the order
             $order = $this->orderService->createOrder($customerId, $paymentMethod, $shippingAddress, $billingAddress, $items, $couponCode);
-			
-			// Check for errors in order creation
+
+            // Check for errors in order creation
             if (is_wp_error($order)) {
                 return $order;
             }
-			
+
             // If order is pending and customer ID and cart items are valid, clear cart
             if ($order["status"] === "pending" && $customerId && $cartItemKeys) {
                 foreach ($cartItemKeys as $item) {
