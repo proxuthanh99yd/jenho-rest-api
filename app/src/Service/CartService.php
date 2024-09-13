@@ -83,7 +83,7 @@ class CartService
         $cart_data = $this->findMyCart($userId) ?: ['cart' => []];
 
         foreach ($cart_data['cart'] as $key => $val) {
-            if ($val['product_id'] == $productId && $val['variation_id'] == $variation_id) {
+            if ($product->get_type() == 'variable' && $val['product_id'] == $productId && $val['variation_id'] == $variation_id) {
 
                 if ($variation_id && !$this->inStock($product, $variation_id, $quantity + $cart_data['cart'][$key]['quantity'])) {
                     return new WP_Error('out_of_stock', 'Product out of stock', ['status' => 400]);
@@ -93,6 +93,15 @@ class CartService
                 update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
                 return $this->formatData($cart_data['cart'][$key], $product, $variation_id)[$product->get_type()]();
                 // return $this->cartFormatData($cart_data['cart'][$key], $product, $variation_id);
+            } else {
+
+                if (!$this->inStock($product, 0, $quantity + $cart_data['cart'][$key]['quantity'])) {
+                    return new WP_Error('out_of_stock', 'Product out of stock', ['status' => 400]);
+                }
+
+                $cart_data['cart'][$key]['quantity'] += $quantity;
+                update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
+                return $this->formatData($cart_data['cart'][$key], $product)[$product->get_type()]();
             }
         }
 
@@ -206,7 +215,7 @@ class CartService
 
         update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
 
-        return $this->cartFormatData($cart_data['cart'][$cart_item_key], $product);
+        // return $this->cartFormatData($cart_data['cart'][$cart_item_key], $product);
         return $this->formatData($cart_data['cart'][$cart_item_key], $product)[$product->get_type()]();
     }
 
@@ -355,36 +364,36 @@ class CartService
         return [];
     }
 
-    /**
-     * Formats the cart item data for response.
-     */
-    private function cartFormatData($data, $product, $variation_id = null)
-    {
-        unset($data['line_tax_data']);
-        unset($data['line_subtotal']);
-        unset($data['line_subtotal_tax']);
-        unset($data['line_total']);
-        unset($data['line_tax']);
+    // /**
+    //  * Formats the cart item data for response.
+    //  */
+    // private function cartFormatData($data, $product, $variation_id = null)
+    // {
+    //     unset($data['line_tax_data']);
+    //     unset($data['line_subtotal']);
+    //     unset($data['line_subtotal_tax']);
+    //     unset($data['line_total']);
+    //     unset($data['line_tax']);
 
-        if ($variation_id) {
-            $variations = $this->getVariation($product, $variation_id);
-            return array_merge($data, $variations, array(
-                'product_name' => $product->get_name(),
-                'product_slug' => $product->get_slug(),
-                'product_image' => wp_get_attachment_url($product->get_image_id()),
-            ));
-        } else {
-            return array_merge($data, array(
-                'product_name' => $product->get_name(),
-                'product_slug' => $product->get_slug(),
-                'product_image' => wp_get_attachment_url($product->get_image_id()),
-                'variation' => "customize",
-                'price' => $product->get_price(),
-                'regular_price' => $product->get_regular_price(),
-                'is_in_stock' => $product->is_in_stock(),
-            ));
-        }
-    }
+    //     if ($variation_id) {
+    //         $variations = $this->getVariation($product, $variation_id);
+    //         return array_merge($data, $variations, array(
+    //             'product_name' => $product->get_name(),
+    //             'product_slug' => $product->get_slug(),
+    //             'product_image' => wp_get_attachment_url($product->get_image_id()),
+    //         ));
+    //     } else {
+    //         return array_merge($data, array(
+    //             'product_name' => $product->get_name(),
+    //             'product_slug' => $product->get_slug(),
+    //             'product_image' => wp_get_attachment_url($product->get_image_id()),
+    //             'variation' => "customize",
+    //             'price' => $product->get_price(),
+    //             'regular_price' => $product->get_regular_price(),
+    //             'is_in_stock' => $product->is_in_stock(),
+    //         ));
+    //     }
+    // }
 
     /**
      * Checks if a product or variation is in stock.
@@ -413,8 +422,8 @@ class CartService
         unset($data['line_tax']);
 
         return [
-            'simple' => function () use ($data, $product, $variation_id) {
-                return  $this->simpleProductFormat($data, $product, $variation_id);
+            'simple' => function () use ($data, $product) {
+                return  $this->simpleProductFormat($data, $product);
             },
             'variable' =>
             function () use ($data, $product, $variation_id) {
@@ -423,28 +432,12 @@ class CartService
         ];
     }
 
-    private function simpleProductFormat($data, $product, $variation_id = null)
+    private function simpleProductFormat($data, $product)
     {
-        if ($variation_id) {
-            $variations = $this->getVariation($product, $variation_id);
-            return array_merge($data, $variations, array(
-                'product_name' => $product->get_name(),
-                'product_slug' => $product->get_slug(),
-                'product_image' => wp_get_attachment_url($product->get_image_id()),
-                'product_type' => $product->get_type(),
-            ));
-        } else {
-            return array_merge($data, array(
-                'product_name' => $product->get_name(),
-                'product_slug' => $product->get_slug(),
-                'product_image' => wp_get_attachment_url($product->get_image_id()),
-                'product_type' => $product->get_type(),
-                'variation' => "customize",
-                'price' => $product->get_price(),
-                'regular_price' => $product->get_regular_price(),
-                'is_in_stock' => $product->is_in_stock(),
-            ));
-        }
+
+        return array_merge($data, array(
+            'product' => $this->productService->getProduct($product->get_id()),
+        ));
     }
 
     private function variableProductFormat($data, $product, $variation_id = null)
@@ -456,13 +449,7 @@ class CartService
             ));
         } else {
             return array_merge($data, array(
-                'product_name' => $product->get_name(),
-                'product_slug' => $product->get_slug(),
-                'product_image' => wp_get_attachment_url($product->get_image_id()),
-                'variation' => "customize",
-                'price' => $product->get_price(),
-                'regular_price' => $product->get_regular_price(),
-                'is_in_stock' => $product->is_in_stock(),
+                'product' => $this->productService->getProduct($product->get_id()),
             ));
         }
     }

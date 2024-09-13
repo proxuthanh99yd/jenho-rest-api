@@ -84,6 +84,7 @@ class ProductService
                     'name' => $product->get_name(),
                     'slug' => $product->get_slug(),
                     'price' => intval($this->getPrice($product->get_id())),
+                    'currency' => $this->getCurrencyByProductId($product->get_id()),
                     'regular_price' => intval($this->getRegularPrice($product->get_id())),
                     'image' => wp_get_attachment_url($product->get_image_id()),
                     'video' => $this->getVideo($product->get_id()),
@@ -99,8 +100,7 @@ class ProductService
         $products['page'] = intval($query->query_vars['paged']);
         $products['totalPages'] = intval($query->max_num_pages);
         $products['limit'] = intval($query->query_vars['posts_per_page']);
-        // $products['currency'] = $args['currency'];
-        $products['currency'] = $defaults;
+        $products['currency'] = $args['currency'];
         return $products;
     }
 
@@ -367,7 +367,7 @@ class ProductService
         ];
     }
 
-    private function getCurrencyByProductId($product_id)
+    public function getCurrencyByProductId($product_id)
     {
         // Ensure the product ID is valid
         if (empty($product_id) || !is_numeric($product_id)) {
