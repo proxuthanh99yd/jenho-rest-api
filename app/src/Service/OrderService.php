@@ -100,7 +100,7 @@ class OrderService
                         $fee_percent = get_field('customize_size_fee', 'option');
                         $item_fee = $quantity * $productVariations->get_price() * ($fee_percent / 100);
                         $total_fee += $item_fee;
-                        wc_add_order_item_meta($item_id, '_custom_line_item_field_fee', sanitize_text_field('$' . $item_fee), true);
+                        wc_add_order_item_meta($item_id, '_custom_line_item_field_fee', sanitize_text_field($item_fee), true);
                     }
                 } else {
                     $order->add_product(
