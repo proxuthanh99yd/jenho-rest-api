@@ -99,7 +99,7 @@ class ProductService
         $products['page'] = intval($query->query_vars['paged']);
         $products['totalPages'] = intval($query->max_num_pages);
         $products['limit'] = intval($query->query_vars['posts_per_page']);
-        $products['curency'] = $this->currency[$args['currency']];
+        $products['currency'] = array_key_exists($args['currency'], $this->currency) ?: '';
         return $products;
     }
 
