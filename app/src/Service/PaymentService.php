@@ -11,7 +11,7 @@ class PaymentService
     private $serviceId = PMT_SERVICEID;
     private $action = PMT_GATE;
     private $transactionType = "SALE";
-    private $pymtMethod = "CC";
+    private $pymtMethod = "ANY";
     private $merchantReturnUrl = "https://jenho.cms.okhub-tech.com/return";
     private $currencyCode = "MYR";
 
