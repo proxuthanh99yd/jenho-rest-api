@@ -189,6 +189,7 @@ class ProductService
             'name' => $product->get_name(),
             'slug' => $product->get_slug(),
             'price' => intval($this->getPrice($product->get_id())),
+            'currency' => $this->getCurrencyByProductId($product->get_id()),
             'regular_price' => intval($this->getRegularPrice($product->get_id())),
             'descriptions' => get_field('product_details', $product->get_id()),
             'sku' => $product->get_sku(),
@@ -364,5 +365,12 @@ class ProductService
             ],
             'additional_images' => $this->getVariationImages($variation['variation_id']),
         ];
+    }
+
+    private function getCurrencyByProductId($product_id)
+    {
+        $productCategory = 'product_cat';
+        $term = wp_get_post_terms($product_id, $productCategory, array('fields' => 'slug'));
+        return $term;
     }
 }
