@@ -33,14 +33,6 @@ class ProductService
             'order' => 'ASC', // Order direction (ascending)
         );
 
-        // Add currency filter if specified
-        if ($args['currency'] && array_key_exists(
-            $args['currency'],
-            $this->currency
-        )) {
-            $defaults['category_name'] =  $this->currency[$args['currency']];
-        }
-
         // Handling size and color filters for products using taxonomies
         if (!empty($args['sizes']) || !empty($args['colors']) || !$args['currency']) {
             $taxQuery = [];
@@ -56,6 +48,15 @@ class ProductService
                     'taxonomy' => 'pa_color', // Product attribute for color
                     'field' => 'slug',
                     'terms' => $args['colors'],
+                ];
+            }
+
+            // Add currency filter if specified
+            if ($args['currency'] && array_key_exists($args['currency'], $this->currency)) {
+                $taxQuery[] = [
+                    'taxonomy' => 'product_cat',
+                    'field' => 'slug',
+                    'terms' => [$this->currency[$args['currency']]],
                 ];
             }
 
@@ -98,7 +99,8 @@ class ProductService
         $products['page'] = intval($query->query_vars['paged']);
         $products['totalPages'] = intval($query->max_num_pages);
         $products['limit'] = intval($query->query_vars['posts_per_page']);
-        $products['currency'] = array_key_exists($args['currency'], $this->currency) ? $this->currency[$args['currency']] : '';
+        // $products['currency'] = $args['currency'];
+        $products['currency'] = $defaults;
         return $products;
     }
 
