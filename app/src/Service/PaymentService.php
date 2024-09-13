@@ -2,8 +2,8 @@
 
 namespace Okhub\Service;
 
-use Okhub\Service\ProductService;
 use WP_REST_Request;
+use WP_Error;
 
 class PaymentService
 {
@@ -23,6 +23,10 @@ class PaymentService
         $timestamp = time() * 1000;
         $orderId = $request->get_param('OrderNumber');
         $order = wc_get_order($orderId);
+
+        if (!$order)   return new WP_Error('order_not_found', 'Order not found', ['status' => 404]);
+
+
         $data = $order->get_data();
         $paymentID = "JENHO" . substr($timestamp, -6) . $orderId;
         return [

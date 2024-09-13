@@ -3,6 +3,7 @@
 namespace OKhub\Controller;
 
 use Okhub\Service\PaymentService;
+use Okhub\Utils\Validator;
 use WP_REST_Request;
 use WP_Error;
 
@@ -21,7 +22,12 @@ class PaymentController
         register_rest_route('api/v1', 'payments', array(
             'methods' => 'POST',
             'callback' => array($this, 'paymentGateway'),
-            'permission_callback' => '__return_true'
+            'permission_callback' => '__return_true',
+            'args' => [
+                'currency' => [
+                    'validate_callback' => array(Validator::class, 'validate_currency'), // Validation for currency
+                ],
+            ]
         ));
     }
 
