@@ -36,7 +36,7 @@ class ProductController
             'permission_callback' => '__return_true', // No authentication required
             'args' => [
                 'currency' => [
-                    'validate_callback' => ['Validator', 'validate_currency'], // Validation for currency
+                    'validate_callback' => array(Validator::class, 'validate_currency'), // Validation for currency
                 ],
             ]
         ));
