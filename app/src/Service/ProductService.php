@@ -174,6 +174,7 @@ class ProductService
             'regular_price' => intval($this->getRegularPrice($product->get_id())),
             'descriptions' => get_field('product_details', $product->get_id()),
             'sku' => $product->get_sku(),
+            'stock' => $product->get_stock_quantity(),
             'stock_status' => $product->get_stock_status(),
             'image' => wp_get_attachment_url($product->get_image_id()),
             'video' => $this->getVideo($product->get_id()),
