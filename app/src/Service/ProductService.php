@@ -369,8 +369,23 @@ class ProductService
 
     private function getCurrencyByProductId($product_id)
     {
-        $productCategory = 'product_cat';
-        $term = wp_get_post_terms($product_id, $productCategory, array('fields' => 'slug'));
-        return $term;
+        // Ensure the product ID is valid
+        if (empty($product_id) || !is_numeric($product_id)) {
+            return false; // Return false if the product ID is invalid
+        }
+
+        // Define the taxonomy for product categories
+        $taxonomy = 'product_cat';
+
+        // Retrieve the product categories (terms) associated with the product
+        $terms = wp_get_post_terms($product_id, $taxonomy);
+
+        // Check if terms are found and there are no errors
+        if (!is_wp_error($terms) && !empty($terms)) {
+            return $terms; // Return an array of WP_Term objects representing categories
+        }
+
+        // Return false if no categories are found or an error occurs
+        return false;
     }
 }
