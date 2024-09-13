@@ -3,6 +3,7 @@
 namespace OKhub\Controller;
 
 use Okhub\Service\ProductService;
+use Okhub\Utils\Validator;
 use WP_REST_Request;
 use WP_Error;
 
@@ -32,7 +33,12 @@ class ProductController
         register_rest_route('api/v1', 'products/(?P<id>\d+)', array(
             'methods' => 'GET',
             'callback' => array($this, 'getProduct'),
-            'permission_callback' => '__return_true' // No authentication required
+            'permission_callback' => '__return_true', // No authentication required
+            'args' => [
+                'currency' => [
+                    'validate_callback' => ['Validator', 'validate_currency'], // Validation for currency
+                ],
+            ]
         ));
 
         // Route to get a list of products with optional filters

@@ -1,4 +1,5 @@
 <?php
+
 namespace Okhub\Utils;
 
 class Validator
@@ -30,12 +31,23 @@ class Validator
         }
         return new WP_Error('rest_invalid_param', sprintf('The %s field must be a valid phone number.', $param), ['status' => 400]);
     }
-	
-	// Validates an email address
-    public static function validate_email($value, $request, $param) {
+
+    // Validates an email address
+    public static function validate_email($value, $request, $param)
+    {
         if (is_email($value)) {
             return true;
         }
         return new WP_Error('rest_invalid_param', sprintf('The %s field must be a valid email address.', $param), ['status' => 400]);
+    }
+
+    // Validates currency (MYR, VND, USD)
+    public static function validate_currency($value, $request, $param)
+    {
+        $valid_currencies = ['MYR', 'VND', 'USD'];
+        if (is_string($value) && in_array(strtoupper($value), $valid_currencies, true)) {
+            return true;
+        }
+        return new \WP_Error('rest_invalid_param', sprintf('The %s field must be a valid currency (MYR, VND, USD).', $param), ['status' => 400]);
     }
 }
