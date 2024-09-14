@@ -84,8 +84,9 @@ class CartService
         $cart_data = $this->findMyCart($userId) ?: ['cart' => []];
 
         foreach ($cart_data['cart'] as $key => $val) {
+            error_log('add cart: ' . $product->get_type() . ' - ' . $productId . ' - ' . $variation_id);
+            error_log('in cart: ' . $product->get_type() . ' - ' . $val['product_id'] . ' - ' . $val['variation_id']);
             if ($product->get_type() == 'variable' && $val['product_id'] == $productId && $val['variation_id'] == $variation_id) {
-
                 if ($variation_id && !$this->inStock($product, $variation_id, $quantity + $cart_data['cart'][$key]['quantity'])) {
                     error_log('Product out of stock line 90');
                     return new WP_Error('out_of_stock', 'Product out of stock', ['status' => 400]);
