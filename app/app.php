@@ -21,6 +21,9 @@ add_action('woocommerce_init', function () {
     $paymentService = new \Okhub\Service\PaymentService();
     $paymentController = new \Okhub\Controller\PaymentController($paymentService);
 
+    $wishlistService = new \Okhub\Service\WishlistService();
+    $wishlistController = new \Okhub\Controller\WishlistController($wishlistService, $authService);
+
     // Create a global instance of OrderService
     function okhub_order_service($arg)
     {
