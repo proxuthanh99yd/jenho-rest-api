@@ -77,21 +77,21 @@ class OrderService
                 $customizeFields = $item['customize'] ?? [];
                 $product = wc_get_product($product_id); // Retrieve the product object
 
-                // Check if product is valid
-                $product_currency = $this->productService->getProduct($product_id);
-                if (!$currency) {
-                    $currency = $product_currency['currency'] ? $product_currency['currency'] : "";
-                } else {
-                    error_log(json_encode($product_currency));
-                    if (!$product_currency['currency'] || $currency != $product_currency['currency']) {
-                        return new WP_Error('invalid_currency', __('Invalid currency: ' . $currency), array('status' => 400));
-                    }
-                }
-
 
                 if (!$product) {
                     // Return error if product is invalid
                     return new WP_Error('invalid_product', __('Invalid product ID: ' . $product_id), array('status' => 400));
+                }
+
+                // Check if product is valid
+                $product_currency = $this->productService->getProduct($product_id);
+
+                if (!$currency) {
+                    $currency = $product_currency['currency'] ? $product_currency['currency'] : "";
+                } else {
+                    if (!$product_currency['currency'] || $currency != $product_currency['currency']) {
+                        return new WP_Error('invalid_currency', __('Invalid currency: ' . $currency), array('status' => 400));
+                    }
                 }
 
                 // Add product or variation to the order
