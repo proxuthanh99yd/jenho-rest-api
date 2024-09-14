@@ -65,17 +65,24 @@ class CartService
      */
     public function addToCart($productId, $quantity = 1, $variation_id = 0)
     {
-        if (!WC()->cart && function_exists('wc_load_cart')) {
-            wc_load_cart();
+        // Kiểm tra xem WooCommerce giỏ hàng đã khởi tạo hay chưa
+        if (!WC()->cart) {
+            if (function_exists('wc_load_cart')) {
+                wc_load_cart();
+            } else {
+                return new WP_Error('cart_not_initialized', 'Cart could not be initialized', ['status' => 500]);
+            }
         }
 
         $userId = get_current_user_id();
         $product = wc_get_product($productId);
 
+        // Kiểm tra xem sản phẩm có tồn tại không
         if (!$product) {
             return new WP_Error('product_not_found', 'Product not found', ['status' => 404]);
         }
 
+        // Kiểm tra hàng tồn kho cho sản phẩm biến thể
         if ($variation_id && !$this->inStock($product, $variation_id, $quantity)) {
             error_log('Product out of stock line 80');
             return new WP_Error('out_of_stock', 'Product out of stock', ['status' => 400]);
@@ -83,6 +90,7 @@ class CartService
 
         $cart_data = $this->findMyCart($userId) ?: ['cart' => []];
 
+        // Kiểm tra xem sản phẩm đã có trong giỏ hàng hay chưa
         foreach ($cart_data['cart'] as $key => $val) {
             error_log('add cart: ' . $product->get_type() . ' - ' . $productId . ' - ' . $variation_id);
             error_log('in cart: ' . $product->get_type() . ' - ' . $val['product_id'] . ' - ' . $val['variation_id']);
@@ -90,29 +98,33 @@ class CartService
             if ($product->get_type() == 'variable') {
                 if ($val['product_id'] != $productId || $val['variation_id'] != $variation_id) continue;
 
+                // Kiểm tra tồn kho khi tăng số lượng sản phẩm
                 if ($variation_id && !$this->inStock($product, $variation_id, $quantity + $cart_data['cart'][$key]['quantity'])) {
                     error_log('Product out of stock line 90');
                     return new WP_Error('out_of_stock', 'Product out of stock', ['status' => 400]);
                 }
 
+                // Tăng số lượng sản phẩm trong giỏ hàng
                 $cart_data['cart'][$key]['quantity'] += $quantity;
                 update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
                 return $this->formatData($cart_data['cart'][$key], $product, $variation_id)[$product->get_type()]();
-                // return $this->cartFormatData($cart_data['cart'][$key], $product, $variation_id);
             } else {
                 if ($val['product_id'] != $productId) continue;
 
+                // Kiểm tra tồn kho cho sản phẩm đơn giản
                 if (!$this->inStock($product, 0, $quantity + $cart_data['cart'][$key]['quantity'])) {
                     error_log('Product out of stock line 100');
                     return new WP_Error('out_of_stock', 'Product out of stock', ['status' => 400]);
                 }
 
+                // Tăng số lượng sản phẩm trong giỏ hàng
                 $cart_data['cart'][$key]['quantity'] += $quantity;
                 update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
                 return $this->formatData($cart_data['cart'][$key], $product)[$product->get_type()]();
             }
         }
 
+        // Nếu sản phẩm chưa có trong giỏ hàng, thêm mới vào giỏ
         $cart_item_key = WC()->cart->generate_cart_id($productId, $variation_id);
         $cart_data['cart'][$cart_item_key] = [
             'key' => $cart_item_key,
@@ -122,11 +134,10 @@ class CartService
             'created_at' => current_time('mysql'),
         ];
 
+        // Cập nhật giỏ hàng trong cơ sở dữ liệu
         update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
         return $this->formatData($cart_data['cart'][$cart_item_key], $product, $variation_id)[$product->get_type()]();
-        // return $this->cartFormatData($cart_data['cart'][$cart_item_key], $product, $variation_id);
     }
-
 
     /**
      * Updates the quantity of a specific item in the cart.
