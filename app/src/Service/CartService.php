@@ -402,10 +402,25 @@ class CartService
     {
         if ($variation_id) {
             $variation = new \WC_Product_Variation($variation_id);
-            return $variation->is_in_stock() && $variation->has_enough_stock($quantity);
+            if ($variation && $variation->is_in_stock()) {
+                // Kiểm tra số lượng tồn kho nếu đang quản lý tồn kho
+                if ($variation->managing_stock()) {
+                    return $variation->get_stock_quantity() >= $quantity;
+                }
+                return true; // Nếu không quản lý tồn kho, giả định là đủ hàng
+            }
+            return false;
         }
-        return $product->is_in_stock() && $product->has_enough_stock($quantity);
+        // Kiểm tra sản phẩm gốc
+        if ($product->is_in_stock()) {
+            if ($product->managing_stock()) {
+                return $product->get_stock_quantity() >= $quantity;
+            }
+            return true;
+        }
+        return false;
     }
+
 
     public function addToCartTest($productId, $quantity, $variation_id)
     {
