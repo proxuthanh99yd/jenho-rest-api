@@ -370,7 +370,7 @@ class OrderService
 
         if (!$order) {
             // Log error if order retrieval fails
-            error_log('Failed to retrieve order with ID: ' . $order_id);
+            // error_log('Failed to retrieve order with ID: ' . $order_id);
             return;
         }
 

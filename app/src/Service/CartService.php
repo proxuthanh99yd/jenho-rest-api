@@ -32,28 +32,28 @@ class CartService
 
         // Check if WooCommerce is active and its necessary objects are available
         if (!class_exists('WooCommerce') || !isset(WC()->session) || !isset(WC()->cart)) {
-            error_log('WooCommerce is not fully initialized. Aborting cart initialization.');
+            // error_log('WooCommerce is not fully initialized. Aborting cart initialization.');
             return;
         }
 
         // Initialize WooCommerce session if it hasn't started
         if (!WC()->session->has_session()) {
             WC()->session->init();
-            error_log('WooCommerce session was not active, initializing now.');
+            // error_log('WooCommerce session was not active, initializing now.');
         }
 
         // Initialize WooCommerce cart if not already initialized or forced
         if (!WC()->cart || $force_initialize) {
             WC()->cart = new \WC_Cart();
             WC()->cart->get_cart_from_session(); // This line should be guarded against nulls
-            error_log('WooCommerce cart initialized.');
+            // error_log('WooCommerce cart initialized.');
         } else {
-            error_log('WooCommerce cart already initialized.');
+            // error_log('WooCommerce cart already initialized.');
         }
 
         // Double-check cart object is not null
         if (!WC()->cart) {
-            error_log('Failed to initialize WooCommerce cart object.');
+            // error_log('Failed to initialize WooCommerce cart object.');
             return new WP_Error('cart_initialization_failed', __('Failed to initialize the cart.'), ['status' => 500]);
         }
 
@@ -319,7 +319,7 @@ class CartService
                     'meta_key' => $persistent_cart_meta_key
                 ]
             );
-            error_log('Persistent cart data cleared for user ID: ' . $user_id);
+            // error_log('Persistent cart data cleared for user ID: ' . $user_id);
         }
 
         return ['message' => __('Cart cleared successfully.')];
