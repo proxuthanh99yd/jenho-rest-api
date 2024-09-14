@@ -86,7 +86,10 @@ class CartService
         foreach ($cart_data['cart'] as $key => $val) {
             error_log('add cart: ' . $product->get_type() . ' - ' . $productId . ' - ' . $variation_id);
             error_log('in cart: ' . $product->get_type() . ' - ' . $val['product_id'] . ' - ' . $val['variation_id']);
-            if ($product->get_type() == 'variable' && $val['product_id'] == $productId && $val['variation_id'] == $variation_id) {
+
+            if ($product->get_type() == 'variable') {
+                if ($val['product_id'] != $productId || $val['variation_id'] != $variation_id) continue;
+
                 if ($variation_id && !$this->inStock($product, $variation_id, $quantity + $cart_data['cart'][$key]['quantity'])) {
                     error_log('Product out of stock line 90');
                     return new WP_Error('out_of_stock', 'Product out of stock', ['status' => 400]);
@@ -97,6 +100,7 @@ class CartService
                 return $this->formatData($cart_data['cart'][$key], $product, $variation_id)[$product->get_type()]();
                 // return $this->cartFormatData($cart_data['cart'][$key], $product, $variation_id);
             } else {
+                if ($val['product_id'] != $productId) continue;
 
                 if (!$this->inStock($product, 0, $quantity + $cart_data['cart'][$key]['quantity'])) {
                     error_log('Product out of stock line 100');
