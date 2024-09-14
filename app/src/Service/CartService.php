@@ -351,70 +351,6 @@ class CartService
     }
 
     /**
-     * Retrieves the variation data for a specific product.
-     */
-    private function getVariation($product, $variation_id)
-    {
-        if (!$product->is_type('variable')) return [];
-
-        foreach ($product->get_available_variations() as $variation) {
-            if ($variation['variation_id'] === $variation_id) {
-                $attributes = [];
-                foreach ($variation['attributes'] as $key => $value) {
-                    $term = get_term_by('slug', $value, str_replace('attribute_', '', $key), 'ARRAY_A');
-                    if ($term) {
-                        if ($term['taxonomy'] === 'pa_color') {
-                            $term['hex_color'] = get_field('color_hex_color_codes', $term['taxonomy'] . '_' . $term['term_id']);
-                        }
-                        unset($term["term_group"], $term["description"], $term["parent"], $term["count"], $term["filter"]);
-                        $attributes[str_replace('attribute_', '', $key)] = $term;
-                    }
-                }
-                return [
-                    'attributes' => $attributes,
-                    'price' => $variation['display_price'],
-                    'regular_price' => $variation['display_regular_price'],
-                    'is_in_stock' => $variation['is_in_stock'],
-                    'stock' => $variation['max_qty'],
-                ];
-            }
-        }
-
-        return [];
-    }
-
-    // /**
-    //  * Formats the cart item data for response.
-    //  */
-    // private function cartFormatData($data, $product, $variation_id = null)
-    // {
-    //     unset($data['line_tax_data']);
-    //     unset($data['line_subtotal']);
-    //     unset($data['line_subtotal_tax']);
-    //     unset($data['line_total']);
-    //     unset($data['line_tax']);
-
-    //     if ($variation_id) {
-    //         $variations = $this->getVariation($product, $variation_id);
-    //         return array_merge($data, $variations, array(
-    //             'product_name' => $product->get_name(),
-    //             'product_slug' => $product->get_slug(),
-    //             'product_image' => wp_get_attachment_url($product->get_image_id()),
-    //         ));
-    //     } else {
-    //         return array_merge($data, array(
-    //             'product_name' => $product->get_name(),
-    //             'product_slug' => $product->get_slug(),
-    //             'product_image' => wp_get_attachment_url($product->get_image_id()),
-    //             'variation' => "customize",
-    //             'price' => $product->get_price(),
-    //             'regular_price' => $product->get_regular_price(),
-    //             'is_in_stock' => $product->is_in_stock(),
-    //         ));
-    //     }
-    // }
-
-    /**
      * Checks if a product or variation is in stock.
      */
     private function inStock($product, $variation_id = 0, $quantity = 1)
@@ -438,13 +374,6 @@ class CartService
             return true;
         }
         return false;
-    }
-
-
-    public function addToCartTest($productId, $quantity, $variation_id)
-    {
-        $product = wc_get_product($productId);
-        return $this->formatData([], $product, $variation_id)[$product->get_type()]();
     }
 
     private function formatData($data, $product, $variation_id = null)

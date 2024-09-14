@@ -40,13 +40,6 @@ class CartController
         ));
 
         // Add to Cart
-        register_rest_route('api/v1', 'carts-test', array(
-            'methods' => 'POST',
-            'callback' => array($this, 'addToCartTest'),
-            'permission_callback' => array($this, 'bearerTokenAuth')
-        ));
-
-        // Add to Cart
         register_rest_route('api/v1', 'carts/(?P<cart_item_key>[\w]+)', array(
             'methods' => 'PUT',
             'callback' => array($this, 'updateToCart'),
@@ -109,28 +102,6 @@ class CartController
         }
 
         return $this->cartService->addToCart($productId, $quantity, $variation_id);
-    }
-
-    /**
-     * Adds a product to the cart.
-     *
-     * @param WP_REST_Request $request
-     * @return WP_REST_Response|WP_Error
-     */
-    public function addToCartTest(WP_REST_Request $request)
-    {
-        $productId = $request->get_param('product_id');
-        $variation_id = $request->get_param('variation_id');
-        $quantity = $request->get_param('quantity') || $request->get_param('quantity') <= 0 ? $request->get_param('quantity') : 1;
-
-        if (!$variation_id) {
-            return new WP_Error('no_variation_id', __('Variation ID is required'), array('status' => 400));
-        }
-        if (!$productId) {
-            return new WP_Error('no_product_id', __('Product ID is required'), array('status' => 400));
-        }
-
-        return $this->cartService->addToCartTest($productId, $quantity, $variation_id);
     }
 
     /**
