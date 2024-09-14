@@ -21,6 +21,7 @@ jobs:
                   username: ${{ secrets.FTP_USERNAME }} # Thay đổi từ 'ftp-username' thành 'username'
                   password: ${{ secrets.FTP_PASSWORD }} # Thay đổi từ 'ftp-password' thành 'password'
                   port: 21 # Cập nhật cổng nếu cần
+                  passive: true # Kích hoạt chế độ FTP thụ động
                   local-dir: "./" # Thư mục mã nguồn
                   server-dir: ${{ secrets.FTP_PATH }} # Thư mục trên server
                   exclude: |
