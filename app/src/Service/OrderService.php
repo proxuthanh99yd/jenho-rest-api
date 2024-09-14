@@ -82,6 +82,7 @@ class OrderService
                 if (!$currency) {
                     $currency = $product_currency['currency'] ? $product_currency['currency'] : "";
                 } else {
+                    error_log(json_encode($product_currency));
                     if (!$product_currency['currency'] || $currency != $product_currency['currency']) {
                         return new WP_Error('invalid_currency', __('Invalid currency: ' . $currency), array('status' => 400));
                     }
