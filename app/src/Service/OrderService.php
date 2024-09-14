@@ -78,11 +78,11 @@ class OrderService
                 $product = wc_get_product($product_id); // Retrieve the product object
 
                 // Check if product is valid
-                $product = $this->productService->getProduct($product_id);
+                $product_currency = $this->productService->getProduct($product_id);
                 if (!$currency) {
-                    $currency = $product['currency'] != 'false' ? $product['currency'] : "";
+                    $currency = $product_currency['currency'] != 'false' ? $product_currency['currency'] : "";
                 } else {
-                    if ($currency != $product['currency']) {
+                    if ($currency != $product_currency['currency']) {
                         return new WP_Error('invalid_currency', __('Invalid currency: ' . $currency), array('status' => 400));
                     }
                 }
