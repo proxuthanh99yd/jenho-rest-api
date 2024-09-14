@@ -78,7 +78,7 @@ class OrderService
                 $product = wc_get_product($product_id); // Retrieve the product object
 
                 // Check if product is valid
-                $product = $this->productService->getProduct($item->get_product_id());
+                $product = $this->productService->getProduct($product_id);
                 if (!$currency) {
                     $currency = $product['currency'] != 'false' ? $product['currency'] : "";
                 } else {
