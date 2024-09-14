@@ -68,12 +68,25 @@ class OrderService
             $order->set_payment_method($paymentMethod);
             $total_fee = 0;
             // Loop through items to add them to the order
+            $currency = null;
+
             foreach ($items as $item) {
                 $product_id = $item['product_id'];
                 $quantity = $item['quantity'];
                 $variation_id = $item['variation_id'] && $item['variation_id'] !== 0 ? $item['variation_id'] : $product_id; // Check for variation ID if applicable
                 $customizeFields = $item['customize'] ?? [];
                 $product = wc_get_product($product_id); // Retrieve the product object
+
+                // Check if product is valid
+                $product = $this->productService->getProduct($item->get_product_id());
+                if (!$currency) {
+                    $currency = $product['currency'] != 'false' ? $product['currency'] : "";
+                } else {
+                    if ($currency != $product['currency']) {
+                        return new WP_Error('invalid_currency', __('Invalid currency: ' . $currency), array('status' => 400));
+                    }
+                }
+
 
                 if (!$product) {
                     // Return error if product is invalid
