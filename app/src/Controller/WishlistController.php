@@ -19,6 +19,7 @@ class WishlistController extends WP_REST_Controller
     {
         $this->wishlistService = $wishlistService;
         $this->authService = $authService;
+        add_action('rest_api_init', array($this, 'register_routes'));
     }
 
     // Đăng ký các route
