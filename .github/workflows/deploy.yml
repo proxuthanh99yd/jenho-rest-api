@@ -1,0 +1,29 @@
+name: Deploy WordPress to Hosting
+
+on:
+    push:
+        branches:
+            - main # Triển khai khi có thay đổi trên nhánh main
+
+jobs:
+    deploy:
+        name: Deploy Website
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+
+            - name: Upload files via FTP
+              uses: SamKirkland/FTP-Deploy-Action@4.3.0
+              with:
+                  ftp-server: ${{ secrets.FTP_SERVER }}
+                  ftp-username: ${{ secrets.FTP_USERNAME }}
+                  ftp-password: ${{ secrets.FTP_PASSWORD }}
+                  local-dir: "./" # Thư mục mã nguồn
+                  server-dir: ${{ secrets.FTP_PATH }} # Thư mục trên server
+                  exclude: |
+                      .git*
+                      .github/
+                      node_modules/
+                      **/*.md
