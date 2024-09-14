@@ -22,7 +22,7 @@ jobs:
                   password: ${{ secrets.FTP_PASSWORD }} # Thay đổi từ 'ftp-password' thành 'password'
                   port: 21 # Cập nhật cổng nếu cần
                   security: loose # Cho phép kết nối linh hoạt hơn
-                  timeout: 300 # Tăng thời gian chờ (timeout) để đảm bảo đủ thời gian kết nối
+                  #   timeout: 300 # Tăng thời gian chờ (timeout) để đảm bảo đủ thời gian kết nối
                   local-dir: "./" # Thư mục mã nguồn
                   server-dir: ${{ secrets.FTP_PATH }} # Thư mục trên server
                   exclude: |
