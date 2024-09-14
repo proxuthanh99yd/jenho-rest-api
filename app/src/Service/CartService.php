@@ -77,6 +77,7 @@ class CartService
         }
 
         if ($variation_id && !$this->inStock($product, $variation_id, $quantity)) {
+            error_log('Product out of stock line 80');
             return new WP_Error('out_of_stock', 'Product out of stock', ['status' => 400]);
         }
 
@@ -86,6 +87,7 @@ class CartService
             if ($product->get_type() == 'variable' && $val['product_id'] == $productId && $val['variation_id'] == $variation_id) {
 
                 if ($variation_id && !$this->inStock($product, $variation_id, $quantity + $cart_data['cart'][$key]['quantity'])) {
+                    error_log('Product out of stock line 90');
                     return new WP_Error('out_of_stock', 'Product out of stock', ['status' => 400]);
                 }
 
@@ -96,6 +98,7 @@ class CartService
             } else {
 
                 if (!$this->inStock($product, 0, $quantity + $cart_data['cart'][$key]['quantity'])) {
+                    error_log('Product out of stock line 100');
                     return new WP_Error('out_of_stock', 'Product out of stock', ['status' => 400]);
                 }
 
