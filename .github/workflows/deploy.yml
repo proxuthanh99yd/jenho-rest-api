@@ -20,6 +20,7 @@ jobs:
                   ftp-server: ${{ secrets.FTP_SERVER }}
                   ftp-username: ${{ secrets.FTP_USERNAME }}
                   ftp-password: ${{ secrets.FTP_PASSWORD }}
+                  port: 21
                   local-dir: "./" # Thư mục mã nguồn
                   server-dir: ${{ secrets.FTP_PATH }} # Thư mục trên server
                   exclude: |
