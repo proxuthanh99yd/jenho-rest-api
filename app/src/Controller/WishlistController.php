@@ -10,7 +10,7 @@ use Okhub\Service\AuthService;
 
 class WishlistController extends WP_REST_Controller
 {
-    protected $namespace = 'okhub/v1';
+    protected $namespace = 'api/v1';
     protected $rest_base = 'wishlist';
     protected $wishlistService;
     private $authService;
