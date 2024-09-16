@@ -216,6 +216,7 @@ class CartService
         foreach ($cart_data['cart'] as $key => $val) {
             if ($cart_data['cart'][$key] === $cart_item_key) {
                 $cart_data['cart'][$key]['quantity'] += $quantity;
+                error_log(json_encode('cart_key' . $cart_item_key . '|| cart_key_in_cart' . $cart_data['cart'][$key]));
                 update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
                 return $this->formatData($cart_data['cart'][$key], $product)[$product->get_type()]();
                 // return $this->cartFormatData($cart_data['cart'][$key], $product);
