@@ -214,9 +214,9 @@ class CartService
         $cart_data = $this->findMyCart($userId) ?: ['cart' => []];
         $cart_item_key = WC()->cart->generate_cart_id($productId, 0, [], $customize);
         foreach ($cart_data['cart'] as $key => $val) {
+            error_log(json_encode('cart_key' . $cart_item_key . '|| cart_key_in_cart' . $cart_data['cart'][$key]));
             if ($cart_data['cart'][$key] === $cart_item_key) {
                 $cart_data['cart'][$key]['quantity'] += $quantity;
-                error_log(json_encode('cart_key' . $cart_item_key . '|| cart_key_in_cart' . $cart_data['cart'][$key]));
                 update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
                 return $this->formatData($cart_data['cart'][$key], $product)[$product->get_type()]();
                 // return $this->cartFormatData($cart_data['cart'][$key], $product);
