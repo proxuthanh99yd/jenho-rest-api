@@ -113,7 +113,7 @@ class CartService
 
                 // Kiểm tra tồn kho cho sản phẩm đơn giản
                 if (!$this->inStock($product, 0, $quantity + $cart_data['cart'][$key]['quantity'])) {
-                    error_log('Product out of stock line 100');
+                    // error_log('Product out of stock line 100');
                     return new WP_Error('out_of_stock', 'Product out of stock', ['status' => 400]);
                 }
 
