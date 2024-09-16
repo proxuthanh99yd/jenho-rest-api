@@ -213,14 +213,14 @@ class CartService
 
         $cart_data = $this->findMyCart($userId) ?: ['cart' => []];
 
-        foreach ($cart_data['cart'] as $key => $val) {
-            if ($val['product_id'] == $productId && array_key_exists('customize', $val) && $val['customize']['color'] == $customize['color']) {
-                $cart_data['cart'][$key]['quantity'] += $quantity;
-                update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
-                return $this->formatData($cart_data['cart'][$key], $product)[$product->get_type()]();
-                // return $this->cartFormatData($cart_data['cart'][$key], $product);
-            }
-        }
+        // foreach ($cart_data['cart'] as $key => $val) {
+        //     if ($val['product_id'] == $productId && array_key_exists('customize', $val) && $val['customize']['color'] == $customize['color']) {
+        //         $cart_data['cart'][$key]['quantity'] += $quantity;
+        //         update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
+        //         return $this->formatData($cart_data['cart'][$key], $product)[$product->get_type()]();
+        //         // return $this->cartFormatData($cart_data['cart'][$key], $product);
+        //     }
+        // }
 
         $cart_item_key = WC()->cart->generate_cart_id($productId);
         $cart_data['cart'][$cart_item_key] = [
