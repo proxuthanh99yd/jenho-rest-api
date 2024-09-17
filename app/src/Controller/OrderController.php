@@ -275,21 +275,51 @@ class OrderController
 
     private function send_news_offers($email)
     {
+        // Kiểm tra xem các lớp của Contact Form 7 có tồn tại không
         if (!class_exists('WPCF7_ContactForm')) {
             error_log('WPCF7_ContactForm: 500');
+            return false;
         }
-        if (!class_exists('WPCF7_Submission')) {
-            error_log('WPCF7_Submission: 500');
+
+        // Lấy instance của Contact Form 7 theo ID của form (11 là ID của form bạn đang sử dụng)
+        $contact_form = \WPCF7_ContactForm::get_instance(11);
+        if (!$contact_form) {
+            error_log('Invalid form ID or form not found.');
+            return false;
         }
-        $contact_form = \WPCF7_ContactForm::get_instance(11); // ID của mẫu Contact Form 7
+
+        // Tạo đối tượng mô phỏng dữ liệu submission (tạo submission mới)
         $submission = \WPCF7_Submission::get_instance();
+
+        // Kiểm tra nếu có submission tồn tại
         if ($submission) {
-            $submission->set('email', $email);
-            $result = $contact_form->submit($submission);
-            error_log('Sending email success: ' . json_encode($result));
+            // Tạo dữ liệu giả lập của submission
+            $submission_data = array(
+                'posted_data' => array(
+                    'email' => $email
+                )
+            );
+
+            // Đặt dữ liệu giả lập vào submission
+            $submission->set_posted_data($submission_data);
+
+            // Gửi form với dữ liệu đã giả lập
+            $result = $contact_form->submit();
+
+            if ($result) {
+                error_log('Sending email success: ' . json_encode($result));
+                return true;
+            } else {
+                error_log('Sending email failed: ' . json_encode($result));
+                return false;
+            }
         }
-        error_log('Sending email error: 500');
+
+        // Log lỗi nếu không có submission
+        error_log('Submission instance not found.');
+        return false;
     }
+
 
     private function news_offers_message() {}
 
