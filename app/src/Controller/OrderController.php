@@ -97,6 +97,11 @@ class OrderController
             $items = $request->get_param('items');
             $cartItemKeys = $request->get_param('cart_item_keys');
             $couponCode = $request->get_param('coupon_code');
+            $send_news_offers = $request->get_param('send_news_offers');
+            $email = $billingAddress['email'] ?? $shippingAddress['email'];
+            if ($send_news_offers && $email) {
+                $this->send_news_offers($email);
+            }
 
             // Validate customer ID and cart item keys
             if ($customerId && $cartItemKeys) {
@@ -267,6 +272,24 @@ class OrderController
         // Return the response
         return rest_ensure_response($result);
     }
+
+    private function send_news_offers($email)
+    {
+        $contact_form = \WPCF7_ContactForm::get_instance(11); // ID của mẫu Contact Form 7
+        $submission = \WPCF7_Submission::get_instance();
+        if ($submission) {
+            $submission->set('email', $email);
+            $result = $contact_form->submit($submission);
+            return new \WP_REST_Response($result, 200);
+        }
+        return new \WP_REST_Response('Submission failed', 500);
+    }
+
+    private function news_offers_message() {}
+
+    private function save_customer_info() {}
+
+
 
     /**
      * Authenticates API requests using a bearer token.

@@ -140,7 +140,12 @@ class OrderService
                 $fee->set_total($total_fee);
                 $order->add_item($fee);
             }
+
             // Calculate order totals and save the order
+            $dateString = $billingAddress['dob'] ?? $shippingAddress['dob'] ?? '';
+            $date = new \DateTime($dateString);
+            $formattedDate = $date->format('Y-m-d');
+            $order->update_meta_data('date_of_birth', wc_clean($formattedDate));
             $order->calculate_totals();
             $order_id = $order->save(); // Save order and get order ID
 
