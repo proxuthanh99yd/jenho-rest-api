@@ -275,50 +275,40 @@ class OrderController
 
     private function send_news_offers($email)
     {
-        // Kiểm tra xem các lớp của Contact Form 7 có tồn tại không
+        // Kiểm tra xem Contact Form 7 có tồn tại hay không
         if (!class_exists('WPCF7_ContactForm')) {
             error_log('WPCF7_ContactForm: 500');
             return false;
         }
 
-        // Lấy instance của Contact Form 7 theo ID của form (11 là ID của form bạn đang sử dụng)
+        // Lấy đối tượng form Contact Form 7 với ID 11
         $contact_form = \WPCF7_ContactForm::get_instance(11);
+
         if (!$contact_form) {
             error_log('Invalid form ID or form not found.');
             return false;
         }
 
-        // Tạo đối tượng mô phỏng dữ liệu submission (tạo submission mới)
-        $submission = \WPCF7_Submission::get_instance();
+        // Giả lập dữ liệu form mà Contact Form 7 sẽ xử lý
+        $submission_data = array(
+            'email' => $email // Giả định trường trong form là 'your-email'
+        );
 
-        // Kiểm tra nếu có submission tồn tại
-        if ($submission) {
-            // Tạo dữ liệu giả lập của submission
-            $submission_data = array(
-                'posted_data' => array(
-                    'email' => $email
-                )
-            );
+        // Giả lập $_POST dữ liệu form để truyền vào submission
+        $_POST = array_merge($_POST, $submission_data);
 
-            // Đặt dữ liệu giả lập vào submission
-            $submission->set_posted_data($submission_data);
+        // Gửi form và kiểm tra kết quả
+        $result = $contact_form->submit();
 
-            // Gửi form với dữ liệu đã giả lập
-            $result = $contact_form->submit();
-
-            if ($result) {
-                error_log('Sending email success: ' . json_encode($result));
-                return true;
-            } else {
-                error_log('Sending email failed: ' . json_encode($result));
-                return false;
-            }
+        if ($result) {
+            error_log('Sending email success: ' . json_encode($result));
+            return true;
+        } else {
+            error_log('Sending email failed: ' . json_encode($result));
+            return false;
         }
-
-        // Log lỗi nếu không có submission
-        error_log('Submission instance not found.');
-        return false;
     }
+
 
 
     private function news_offers_message() {}
