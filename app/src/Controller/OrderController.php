@@ -275,6 +275,12 @@ class OrderController
 
     private function send_news_offers($email)
     {
+        if (!class_exists('WPCF7_ContactForm')) {
+            error_log('Sending email error: 500');
+        }
+        if (!class_exists('WPCF7_Submission')) {
+            error_log('Sending email error: 500');
+        }
         $contact_form = \WPCF7_ContactForm::get_instance(11); // ID của mẫu Contact Form 7
         $submission = \WPCF7_Submission::get_instance();
         if ($submission) {
