@@ -280,9 +280,9 @@ class OrderController
         if ($submission) {
             $submission->set('email', $email);
             $result = $contact_form->submit($submission);
-            return new \WP_REST_Response($result, 200);
+            error_log('Sending email success: ' . json_encode($result));
         }
-        return new \WP_REST_Response('Submission failed', 500);
+        error_log('Sending email error: 500');
     }
 
     private function news_offers_message() {}
