@@ -16,8 +16,10 @@ class CategoryService
         $termFields =  get_field($this->fieldname, $this->page);
         $response = [];
         foreach ($termFields as $term) {
-            // $term_image = get_term_featured_image();
-            $response[] = get_term_by('term_id', $term, $this->tax);
+            $cat_thumb_id = get_woocommerce_term_meta($term->term_id, 'thumbnail_id', true);
+            $cat_thumb_url = wp_get_attachment_thumb_url($cat_thumb_id);
+            $theTerm =  get_term_by('term_id', $term, $this->tax);
+            $response[] = array_merge($theTerm, array('thumbnail' => $cat_thumb_url));
         }
         return $response;
     }
