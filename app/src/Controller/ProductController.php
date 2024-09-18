@@ -94,11 +94,14 @@ class ProductController
             'page' => $request->get_param('page') ?: 1, // Current page number
             'offset' => $request->get_param('offset') ?: 0, // Offset for pagination
         );
-
         // Optional filters from request parameters
         $sizes = $request->get_param('sizes');
         $colors = $request->get_param('colors');
         $price_range = $request->get_param('price_range');
+        $category = $request->get_param('category');
+        if ($category) {
+            $args['category_name'] = $category;
+        }
 
         // If sizes filter is provided, split it into an array
         if ($sizes) {

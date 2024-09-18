@@ -278,6 +278,15 @@ class CartService
         return ['message' => __('Product removed from cart successfully.')];
     }
 
+    public function removeFromCartMultiple($cart_item_keys)
+    {
+        foreach ($cart_item_keys as $cart_item_key) {
+            $this->removeFromCart($cart_item_key);
+        }
+        return ['message' => __('Product removed from cart successfully.')];
+    }
+
+
     /**
      * Retrieves all cart items for the current user.
      */

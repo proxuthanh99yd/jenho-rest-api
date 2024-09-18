@@ -80,6 +80,13 @@ class CartController
             'callback' => array($this, 'clearCart'),
             'permission_callback' => array($this, 'bearerTokenAuth')
         ));
+
+        // Clear Cart
+        register_rest_route('api/v1', 'carts/multiple', array(
+            'methods' => 'DELETE',
+            'callback' => array($this, 'removeFromCartMultiple'),
+            'permission_callback' => array($this, 'bearerTokenAuth')
+        ));
     }
 
     /**
@@ -200,6 +207,19 @@ class CartController
     public function clearCart(WP_REST_Request $request)
     {
         return  $this->cartService->clearCart();
+    }
+
+
+    /**
+     * Removes multiple items from the cart by their cart item keys.
+     *
+     * @param WP_REST_Request $request
+     * @return array
+     */
+    public function removeFromCartMultiple(WP_REST_Request $request)
+    {
+
+        return $this->cartService->removeFromCartMultiple($request->get_param('cart_item_keys'));
     }
 
     /**
