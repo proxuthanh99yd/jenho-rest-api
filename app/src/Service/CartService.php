@@ -272,6 +272,7 @@ class CartService
      */
     public function removeFromCart($cartItemKey, $multiple = false)
     {
+        error_log(json_encode("removeFromCart : " . $cartItemKey));
         $cartData = $this->findMyCart(get_current_user_id());
         unset($cartData['cart'][$cartItemKey]);
         $success = update_user_meta(get_current_user_id(), '_woocommerce_persistent_cart_1', $cartData);
