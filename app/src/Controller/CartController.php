@@ -82,7 +82,7 @@ class CartController
         ));
 
         // Clear Cart
-        register_rest_route('api/v1', 'carts/multiple', array(
+        register_rest_route('api/v1', 'carts-multiple', array(
             'methods' => 'DELETE',
             'callback' => array($this, 'removeFromCartMultiple'),
             'permission_callback' => array($this, 'bearerTokenAuth')
@@ -218,7 +218,7 @@ class CartController
      */
     public function removeFromCartMultiple(WP_REST_Request $request)
     {
-        return $request->get_param('cart_item_keys');
+        error_log(print_r($request->get_param('cart_item_keys'), true));
         return $this->cartService->removeFromCartMultiple($request->get_param('cart_item_keys'));
     }
 
