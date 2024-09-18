@@ -270,18 +270,22 @@ class CartService
     /**
      * Removes a product from the cart by its cart key.
      */
-    public function removeFromCart($cartItemKey)
+    public function removeFromCart($cartItemKey, $multiple = false)
     {
         $cartData = $this->findMyCart(get_current_user_id());
         unset($cartData['cart'][$cartItemKey]);
-        update_user_meta(get_current_user_id(), '_woocommerce_persistent_cart_1', $cartData);
+        $success = update_user_meta(get_current_user_id(), '_woocommerce_persistent_cart_1', $cartData);
+        if ($multiple) return $success;
+        if (!$success) return new WP_Error('no_item', 'No item found with the specified cart key', ['status' => 404]);
         return ['message' => __('Product removed from cart successfully.')];
     }
 
     public function removeFromCartMultiple($cart_item_keys)
     {
         foreach ($cart_item_keys as $cart_item_key) {
-            $this->removeFromCart($cart_item_key);
+            if (!$this->removeFromCart($cart_item_key)) {
+                return new WP_Error('no_item', 'No item found with the specified cart key', ['status' => 404]);
+            }
         }
         return ['message' => __('Product removed from cart successfully.')];
     }
