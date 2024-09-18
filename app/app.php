@@ -5,6 +5,8 @@ add_action('woocommerce_init', function () {
     $authService = new \Okhub\Service\AuthService();
     $authController = new \Okhub\Controller\AuthController($authService);
 
+    $categories = new \Okhub\Service\CategoryService();
+    $categoryController = new \Okhub\Controller\CategoryController($categories);
 
     $productService = new \Okhub\Service\ProductService();
     $productController = new \Okhub\Controller\ProductController($productService);

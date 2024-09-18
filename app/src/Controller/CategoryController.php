@@ -20,7 +20,7 @@ class CategoryController
     {
         // Get a single product
         register_rest_route('api/v1', 'categories', array(
-            'methods' => 'POST',
+            'methods' => 'GET',
             'callback' => array($this, 'getCategories'),
             'permission_callback' => '__return_true',
         ));
@@ -35,7 +35,6 @@ class CategoryController
      */
     public function getCategories(WP_REST_Request $request)
     {
-        $ipAddress = $_SERVER['REMOTE_ADDR'];
         return $this->categoryService->getCategories();
     }
 }
