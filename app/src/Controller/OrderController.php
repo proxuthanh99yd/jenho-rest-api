@@ -301,10 +301,10 @@ class OrderController
         $result = $contact_form->submit();
 
         if ($result) {
-            error_log('Sending email success: ' . json_encode($result));
+            // error_log('Sending email success: ' . json_encode($result));
             return true;
         } else {
-            error_log('Sending email failed: ' . json_encode($result));
+            // error_log('Sending email failed: ' . json_encode($result));
             return false;
         }
     }
