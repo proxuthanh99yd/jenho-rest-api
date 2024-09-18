@@ -90,7 +90,7 @@ class ProductController
         // Set up arguments for the product query with default values
         $args = array(
             'currency' => $request->get_param('currency') ?: null, // Currency to display prices in
-            'limit' => $request->get_param('limit') ?: 10, // Number of products per page
+            'limit' => $request->get_param('limit') ?: 10,  // Number of products per page
             'page' => $request->get_param('page') ?: 1, // Current page number
         );
 

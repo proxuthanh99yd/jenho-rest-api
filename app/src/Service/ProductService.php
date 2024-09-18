@@ -32,7 +32,10 @@ class ProductService
             'orderby' => 'meta_value_num', // Order by a meta value (numeric)
             'order' => 'ASC', // Order direction (ascending)
         );
-
+        if ($args['offset']) {
+            unset($defaults['paged']);
+            $defaults['offset'] = $args['offset'];
+        }
         // Handling size and color filters for products using taxonomies
         if (!empty($args['sizes']) || !empty($args['colors']) || $args['currency']) {
             $taxQuery = [];
@@ -97,7 +100,12 @@ class ProductService
         wp_reset_postdata();
 
         // Set pagination details
+
         $products['page'] = intval($query->query_vars['paged']);
+        if ($args['offset']) {
+            unset($products['page']);
+            $products['offset'] = $args['offset'];
+        }
         $products['totalPages'] = intval($query->max_num_pages);
         $products['limit'] = intval($query->query_vars['posts_per_page']);
         $products['currency'] = $args['currency'];
