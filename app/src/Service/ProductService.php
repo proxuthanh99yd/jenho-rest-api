@@ -34,7 +34,7 @@ class ProductService
         );
 
         // Add pagination offset if specified and valid
-        if (isset($args['offset']) && is_int($args['offset'])) {
+        if (isset($args['offset'])) {
             unset($defaults['paged']);
             $defaults['offset'] = $args['offset'];
         }

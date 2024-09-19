@@ -137,9 +137,9 @@ class ProductController
         $slug = $request->get_param('slug');
         $args = array(
             'currency' => $request->get_param('currency') ?: null, // Currency to display prices in
-            'limit' => intval($request->get_param('limit')) ?: 10,  // Number of products per page
-            'page' => intval($request->get_param('page')) ?: 1, // Current page number
-            'offset' => intval($request->get_param('offset')) ?: 0, // Offset for pagination
+            'limit' => $request->get_param('limit') ?: 10,  // Number of products per page
+            'page' => $request->get_param('page') ?: 1, // Current page number
+            'offset' => $request->get_param('offset') ?: null, // Offset for pagination
             'slug' => $slug
         );
         return $this->productService->getProducts($args, true);
