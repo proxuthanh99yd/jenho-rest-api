@@ -20,7 +20,7 @@ class ProductService
      * @param array $args The arguments to filter products, such as 'limit', 'page', 'sizes', 'colors', and 'price_range'.
      * @return array Returns an array containing product data, pagination details, and total pages.
      */
-    public function getProducts($args = [])
+    public function getProducts($args = [], $slug = false)
     {
         // Set default query parameters for fetching products
         $defaults = array(
@@ -82,6 +82,10 @@ class ProductService
             while ($query->have_posts()) {
                 $query->the_post();
                 $product = wc_get_product(get_the_ID());
+                if ($slug) {
+                    $products['data'][] = $product->get_slug();
+                    continue;
+                }
                 $products['data'][] = array(
                     'id' => $product->get_id(),
                     'name' => $product->get_name(),

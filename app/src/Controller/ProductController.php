@@ -48,6 +48,17 @@ class ProductController
             ]
         ));
 
+        register_rest_route('api/v1', 'slug-products', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'getSlugProducts'),
+            'permission_callback' => '__return_true', // No authentication required
+            'args' => [
+                'currency' => [
+                    'validate_callback' => array(Validator::class, 'validate_currency'), // Validation for currency
+                ],
+            ]
+        ));
+
         // Route to get a single product by slug
         register_rest_route('api/v1', 'products/(?P<slug>[\w-]+)', array(
             'methods' => 'GET',
@@ -120,6 +131,19 @@ class ProductController
 
         // Fetch the products based on the arguments using ProductService
         return $this->productService->getProducts($args);
+    }
+
+    public function getSlugProducts(WP_REST_Request $request)
+    {
+        $slug = $request->get_param('slug');
+        $args = array(
+            'currency' => $request->get_param('currency') ?: null, // Currency to display prices in
+            'limit' => $request->get_param('limit') ?: 10,  // Number of products per page
+            'page' => $request->get_param('page') ?: 1, // Current page number
+            'offset' => $request->get_param('offset') ?: 0, // Offset for pagination
+            'slug' => $slug
+        );
+        return $this->productService->getProducts($args, true);
     }
 
     /**
