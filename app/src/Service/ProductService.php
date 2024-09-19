@@ -91,6 +91,8 @@ class ProductService
             'data' => [], // Initialize data array to store products
         ];
 
+        error_log("defaults: " . json_encode($defaults));
+
         // Execute the query with WP_Query
         $query = new \WP_Query($defaults);
 
