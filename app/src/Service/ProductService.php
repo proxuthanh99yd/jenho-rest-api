@@ -35,7 +35,7 @@ class ProductService
 
         // Add category filter if specified
         if (!empty($args['category_name'])) {
-            $defaults['tax_query']['category_name'] = $args['category_name'];
+            $defaults['category_name'] = $args['category_name'];
         }
 
         // Add pagination offset if specified
@@ -82,7 +82,8 @@ class ProductService
         $products = array(
             'data' => array() // Initialize data array to store products
         );
-        error_log('getProducts: ' . json_encode($defaults));
+        error_log('args: ' . json_encode($args));
+        error_log('defaults: ' . json_encode($defaults));
         // Execute the query with WP_Query
         $query = new \WP_Query($defaults);
         if ($query->have_posts()) {
