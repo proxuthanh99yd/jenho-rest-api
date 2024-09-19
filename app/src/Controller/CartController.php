@@ -218,7 +218,6 @@ class CartController
      */
     public function removeFromCartMultiple(WP_REST_Request $request)
     {
-        error_log(print_r($request->get_param('cart_item_keys'), true));
         return $this->cartService->removeFromCartMultiple($request->get_param('cart_item_keys'));
     }
 
