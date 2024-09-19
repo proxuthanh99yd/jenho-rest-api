@@ -26,26 +26,23 @@ class ProductService
         $defaults = array(
             'post_type' => 'product',
             'post_status' => 'publish',
-            'posts_per_page' => $args['limit'] ?? 10, // Number of products per page
-            'paged' => $args['page'] ?? 1, // Current page number
+            'posts_per_page' => isset($args['limit']) ? intval($args['limit']) : 10, // Number of products per page
+            'paged' => isset($args['page']) ? intval($args['page']) : 1, // Current page number
             'tax_query' => array(), // Taxonomy query array
             'orderby' => 'meta_value_num', // Order by a meta value (numeric)
             'order' => 'ASC', // Order direction (ascending)
         );
 
-        // Add category filter if specified
-        if (!empty($args['category_name'])) {
-            $defaults['category_name'] = $args['category_name'];
-        }
-
-        // Add pagination offset if specified
-        if ($args['offset']) {
+        // Add pagination offset if specified and valid
+        if (isset($args['offset']) && is_int($args['offset'])) {
             unset($defaults['paged']);
             $defaults['offset'] = $args['offset'];
         }
+
         // Handling size and color filters for products using taxonomies
-        if (!empty($args['sizes']) || !empty($args['colors']) || $args['currency']) {
+        if (!empty($args['sizes']) || !empty($args['colors']) || !empty($args['currency']) || !empty($args['category_name'])) {
             $taxQuery = [];
+
             if (!empty($args['sizes'])) {
                 $taxQuery[] = [
                     'taxonomy' => 'pa_size', // Product attribute for size
@@ -53,6 +50,7 @@ class ProductService
                     'terms' => $args['sizes'], // Terms to filter
                 ];
             }
+
             if (!empty($args['colors'])) {
                 $taxQuery[] = [
                     'taxonomy' => 'pa_color', // Product attribute for color
@@ -62,7 +60,7 @@ class ProductService
             }
 
             // Add currency filter if specified
-            if ($args['currency'] && array_key_exists($args['currency'], $this->currency)) {
+            if (!empty($args['currency']) && array_key_exists($args['currency'], $this->currency)) {
                 $taxQuery[] = [
                     'taxonomy' => 'product_cat',
                     'field' => 'slug',
@@ -70,8 +68,18 @@ class ProductService
                 ];
             }
 
+            // Add category filter if specified
+            if (!empty($args['category_name'])) {
+                $taxQuery[] = [
+                    'taxonomy' => 'product_cat',
+                    'field' => 'slug',
+                    'terms' => explode(',', $args['category_name']),
+                ];
+            }
+
+            // Combine queries with 'AND' relation if multiple taxonomies are applied
             if (count($taxQuery) > 1) {
-                array_unshift($taxQuery, ['relation' => 'AND']); // Combine queries with 'AND' relation
+                array_unshift($taxQuery, ['relation' => 'AND']);
             }
             $defaults['tax_query'] = $taxQuery;
         }
@@ -79,22 +87,24 @@ class ProductService
         // Add price range filter if specified
         $defaults = $this->handle_price_range_query_var($defaults, $args);
 
-        $products = array(
-            'data' => array() // Initialize data array to store products
-        );
-        error_log('args: ' . json_encode($args));
-        error_log('defaults: ' . json_encode($defaults));
+        $products = [
+            'data' => [], // Initialize data array to store products
+        ];
+
         // Execute the query with WP_Query
         $query = new \WP_Query($defaults);
+
         if ($query->have_posts()) {
             while ($query->have_posts()) {
                 $query->the_post();
                 $product = wc_get_product(get_the_ID());
+
                 if ($slug) {
                     $products['data'][] = $product->get_slug();
                     continue;
                 }
-                $products['data'][] = array(
+
+                $products['data'][] = [
                     'id' => $product->get_id(),
                     'name' => $product->get_name(),
                     'slug' => $product->get_slug(),
@@ -104,7 +114,7 @@ class ProductService
                     'image' => wp_get_attachment_url($product->get_image_id()),
                     'video' => $this->getVideo($product->get_id()),
                     'variations' => $this->getVariations($product),
-                );
+                ];
             }
         }
 
@@ -112,17 +122,15 @@ class ProductService
         wp_reset_postdata();
 
         // Set pagination details
-
-        $products['page'] = intval($query->query_vars['paged']);
-        if ($args['offset']) {
-            unset($products['page']);
-            $products['offset'] = $args['offset'];
-        }
+        $products['page'] = isset($args['offset']) ? null : intval($query->query_vars['paged']);
+        $products['offset'] = isset($args['offset']) ? intval($args['offset']) : null;
         $products['totalPages'] = intval($query->max_num_pages);
         $products['limit'] = intval($query->query_vars['posts_per_page']);
-        $products['currency'] = $args['currency'];
+        $products['currency'] = $args['currency'] ?? null;
+
         return $products;
     }
+
 
     /**
      * Adds a price range filter to the query if specified.
