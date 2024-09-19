@@ -103,7 +103,7 @@ class ProductController
             'currency' => $request->get_param('currency') ?: null, // Currency to display prices in
             'limit' => $request->get_param('limit') ?: 10,  // Number of products per page
             'page' => $request->get_param('page') ?: 1, // Current page number
-            'offset' => $request->get_param('offset') ?: 0, // Offset for pagination
+            'offset' => $request->get_param('offset') ?: null, // Offset for pagination
         );
         // Optional filters from request parameters
         $sizes = $request->get_param('sizes');
