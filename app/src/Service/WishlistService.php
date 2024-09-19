@@ -44,14 +44,14 @@ class WishlistService
         if (!$wishlist) {
             return new WP_Error('wishlist_not_found', 'Wishlist not found', ['status' => 404]);
         }
-        $wishlist = $this->get_items_by_wishlist($wishlist[0]['ID']);
+        $wishlist = $this->get_items_by_wishlist($wishlist['ID']);
     }
 
     private function find_wishlist_by_user_id($user_id)
     {
         $wishlist = Wishlist::get_all_wishlists_by_user($user_id);
         if ($wishlist) {
-            return $wishlist[0]['ID'];
+            return $wishlist['ID'];
         }
         $data = [
             'user_id' => $user_id,
