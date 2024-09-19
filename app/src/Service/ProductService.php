@@ -82,7 +82,7 @@ class ProductService
         $products = array(
             'data' => array() // Initialize data array to store products
         );
-
+        error_log('getProducts: ' . json_encode($defaults));
         // Execute the query with WP_Query
         $query = new \WP_Query($defaults);
         if ($query->have_posts()) {
