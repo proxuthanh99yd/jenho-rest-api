@@ -39,17 +39,7 @@ class WishlistController extends WP_REST_Controller
                 'methods' => 'POST',
                 'callback' => [$this, 'add_to_wishlist'],
                 'permission_callback' => array($this, 'bearerTokenAuth'),
-                'args' => [
-                    'product_id' => [
-                        'validate_callback' => array(Validator::class, 'validate_number'),
-                    ],
-                    'variation_id' => [
-                        'validate_callback' => array(Validator::class, 'validate_number'),
-                    ],
-                    'quantity' => [
-                        'validate_callback' => array(Validator::class, 'validate_number'),
-                    ]
-                ]
+                'args' => $this->middleware()
             ],
 
         ]);
@@ -60,6 +50,28 @@ class WishlistController extends WP_REST_Controller
                 'permission_callback' => array($this, 'bearerTokenAuth')
             ],
         ]);
+    }
+
+    // Middleware
+    public function middleware()
+    {
+        $args = [];
+        $args['product_id'] = [
+            'type'              => 'number',
+            'required'          => true,
+            'sanitize_callback' => [Validator::class, 'validate_number'],
+        ];
+        $args['variation_id'] = [
+            'type'              => 'number',
+            'required'          => true,
+            'sanitize_callback' => [Validator::class, 'validate_number'],
+        ];
+        $args['quantity'] = [
+            'type'              => 'number',
+            'required'          => true,
+            'sanitize_callback' => [Validator::class, 'validate_number'],
+        ];
+        return $args;
     }
 
     // Lấy danh sách sản phẩm trong wishlist
@@ -75,9 +87,13 @@ class WishlistController extends WP_REST_Controller
     // // Tạo wishlist mới
     public function add_to_wishlist(WP_REST_Request $request)
     {
-        $product_id = $request->get_param('product_id'); // product_id
-        $variation_id = $request->get_param('variation_id'); // variation_id,
-        $quantity = $request->get_param('quantity'); // quantity
+        $product_id = $request->get_param('product_id');
+        $variation_id = $request->get_param('variation_id');
+        $quantity = $request->get_param('quantity');
+
+        if (!$product_id || !$variation_id || !($quantity)) {
+            return new WP_Error('missing_params', 'Missing required parameters', ['status' => 400]);
+        }
 
         $userId = get_current_user_id();
         if (!$userId) {

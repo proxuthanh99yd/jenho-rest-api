@@ -95,8 +95,6 @@ class ProductService
             'data' => [], // Initialize data array to store products
         ];
 
-        error_log("defaults: " . json_encode($defaults));
-
         // Execute the query with WP_Query
         $query = new \WP_Query($defaults);
 
@@ -171,11 +169,9 @@ class ProductService
     public function getProduct($productId)
     {
         $product = wc_get_product($productId);
-
         if (!$product) {
-            return new WP_Error('product_not_found', __('Product not found'), array('status' => 404));
+            return false;
         }
-
         return $this->formatSingleProduct($product);
     }
 
@@ -233,6 +229,7 @@ class ProductService
             'video' => $this->getVideo($product->get_id()),
             'categories' => wp_get_post_terms($product->get_id(), 'product_cat', array('fields' => 'names')),
             'variations' => $this->getVariations($product),
+            'customize_fee' => get_field('customize_size_fee', 'option')
         );
 
         return $response;

@@ -312,13 +312,14 @@ class OrderService
     {
         // Format and return order data
         $items = [];
-        foreach ($order->get_items() as $item) {
+        foreach ($order->get_items() as $item_id => $item) {
             $items[] = array(
                 'product' => $this->productService->getProduct($item->get_product_id()), // Product ID
                 'variation' => $this->productService->getVariationById($item->get_product_id(), $item->get_variation_id()), // Variation ID if applicable
                 'quantity' => $item->get_quantity(), // Quantity ordered
                 'subtotal' => $item->get_subtotal(), // Item subtotal
                 'total' => $item->get_total(), // Item total
+                'customize' => $this->get_custom_fields($item_id), // Customizations
             );
         }
 
@@ -411,5 +412,30 @@ class OrderService
     {
         // Trigger the delayed email function
         $this->send_order_confirmation_email($order_id);
+    }
+
+    private function get_custom_fields($item_id)
+    {
+        $custom_fields = [
+            'height',
+            'weight',
+            'midsection',
+            'burst',
+            'waist',
+            'hip',
+            'to_fit',
+            'color'
+        ];
+        $data = [];
+        foreach ($custom_fields as $field) {
+            $meta_value = wc_get_order_item_meta($item_id, '_custom_line_item_field_' . $field, true);
+            if (!empty($meta_value)) {
+                $data[$field] = $meta_value;
+            }
+        }
+        if (!empty($data)) {
+            return $data;
+        }
+        return null;
     }
 }

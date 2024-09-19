@@ -81,9 +81,8 @@ class ProductController
         // Fetch the product using the ProductService
         $product = $this->productService->getProduct($productId);
 
-        // Check if the product fetch resulted in an error
-        if (is_wp_error($product)) {
-            return $product;
+        if (!$product) {
+            return new WP_Error('product_not_found', __('Product not found'), array('status' => 404));
         }
 
         // Return the product details

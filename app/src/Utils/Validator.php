@@ -2,6 +2,8 @@
 
 namespace Okhub\Utils;
 
+use WP_Error;
+
 class Validator
 {
 
@@ -60,7 +62,7 @@ class Validator
 
         // Validate if the value is numeric
         if (is_numeric($value)) {
-            return true;
+            return $value;
         }
 
         // If it's not numeric, return an error

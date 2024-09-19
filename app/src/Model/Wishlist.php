@@ -13,7 +13,7 @@ class Wishlist
     public $date_created;
     public $date_modified;
 
-    public static function get_all_wishlists_by_user($user_id)
+    public static function get_single_wishlist_by_user($user_id)
     {
         global $wpdb;
         $table = $wpdb->prefix . 'wishlist';
