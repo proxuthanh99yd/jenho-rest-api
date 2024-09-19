@@ -128,7 +128,6 @@ class ProductController
         if ($price_range) {
             $args['price_range'] = explode(',', $price_range);
         }
-        error_log('args: ' . json_encode($args));
         // Fetch the products based on the arguments using ProductService
         return $this->productService->getProducts($args);
     }

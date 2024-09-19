@@ -32,6 +32,13 @@ class ProductService
             'orderby' => 'meta_value_num', // Order by a meta value (numeric)
             'order' => 'ASC', // Order direction (ascending)
         );
+
+        // Add category filter if specified
+        if (!empty($args['category_name'])) {
+            $defaults['tax_query']['category_name'] = $args['category_name'];
+        }
+
+        // Add pagination offset if specified
         if ($args['offset']) {
             unset($defaults['paged']);
             $defaults['offset'] = $args['offset'];
