@@ -7,6 +7,7 @@ use WP_REST_Request;
 use WP_Error;
 use Okhub\Service\WishlistService;
 use Okhub\Service\AuthService;
+use Okhub\Utils\Validator;
 
 class WishlistController extends WP_REST_Controller
 {
@@ -31,22 +32,28 @@ class WishlistController extends WP_REST_Controller
                 'callback' => [$this, 'get_wishlist'],
                 'permission_callback' => array($this, 'bearerTokenAuth')
             ],
-            [
-                'methods' => 'POST',
-                'callback' => [$this, 'create_wishlist'],
-                'permission_callback' => array($this, 'bearerTokenAuth')
-            ],
         ]);
 
-        register_rest_route($this->namespace, '/' . $this->rest_base . '/add', [
+        register_rest_route($this->namespace, '/' . $this->rest_base . '/items', [
             [
                 'methods' => 'POST',
                 'callback' => [$this, 'add_to_wishlist'],
-                'permission_callback' => array($this, 'bearerTokenAuth')
+                'permission_callback' => array($this, 'bearerTokenAuth'),
+                'args' => [
+                    'product_id' => [
+                        'validate_callback' => array(Validator::class, 'validate_number'),
+                    ],
+                    'variation_id' => [
+                        'validate_callback' => array(Validator::class, 'validate_number'),
+                    ],
+                    'quantity' => [
+                        'validate_callback' => array(Validator::class, 'validate_number'),
+                    ]
+                ]
             ],
-        ]);
 
-        register_rest_route($this->namespace, '/' . $this->rest_base . '/remove', [
+        ]);
+        register_rest_route($this->namespace, '/' . $this->rest_base . '/items/(?P<item_id>\d+)', [
             [
                 'methods' => 'DELETE',
                 'callback' => [$this, 'remove_from_wishlist'],
@@ -62,41 +69,22 @@ class WishlistController extends WP_REST_Controller
         if (!$userId) {
             return new WP_Error('unauthorized', 'You are not logged in', ['status' => 401]);
         }
-
-        return $this->wishlistService->getWishlistItems($request, $userId);
+        return $this->wishlistService->get_wishlist_by_user_id($userId);
     }
 
-    // Tạo wishlist mới
-    public function create_wishlist(WP_REST_Request $request)
-    {
-        $userId = get_current_user_id();
-        if (!$userId) {
-            return new WP_Error('unauthorized', 'You are not logged in', ['status' => 401]);
-        }
-
-        return $this->wishlistService->createWishlist($request, $userId);
-    }
-
-    // Thêm sản phẩm vào wishlist
+    // // Tạo wishlist mới
     public function add_to_wishlist(WP_REST_Request $request)
     {
+        $product_id = $request->get_param('product_id'); // product_id
+        $variation_id = $request->get_param('variation_id'); // variation_id,
+        $quantity = $request->get_param('quantity'); // quantity
+
         $userId = get_current_user_id();
         if (!$userId) {
             return new WP_Error('unauthorized', 'You are not logged in', ['status' => 401]);
         }
 
-        return $this->wishlistService->addToWishlist($request, $userId);
-    }
-
-    // Xóa sản phẩm khỏi wishlist
-    public function remove_from_wishlist(WP_REST_Request $request)
-    {
-        $userId = get_current_user_id();
-        if (!$userId) {
-            return new WP_Error('unauthorized', 'You are not logged in', ['status' => 401]);
-        }
-
-        return $this->wishlistService->removeFromWishlist($request, $userId);
+        return $this->wishlistService->add_to_wishlist($product_id, $variation_id, $quantity, $userId);
     }
 
     /**

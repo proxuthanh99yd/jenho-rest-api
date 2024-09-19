@@ -33,6 +33,10 @@ class ProductService
             'order' => 'ASC', // Order direction (ascending)
         );
 
+        if (isset($args['s'])) {
+            $defaults['s'] = $args['s'];
+        }
+
         // Add pagination offset if specified and valid
         if (isset($args['offset'])) {
             unset($defaults['paged']);

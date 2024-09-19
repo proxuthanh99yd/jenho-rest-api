@@ -110,6 +110,12 @@ class ProductController
         $colors = $request->get_param('colors');
         $price_range = $request->get_param('price_range');
         $category = $request->get_param('category');
+        $s = $request->get_param('s');
+
+        if ($s) {
+            $args['s'] = $s;
+        }
+
         if ($category) {
             $args['category_name'] = $category;
         }

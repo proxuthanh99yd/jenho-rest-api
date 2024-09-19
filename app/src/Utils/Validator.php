@@ -50,4 +50,20 @@ class Validator
         }
         return new \WP_Error('rest_invalid_param', sprintf('The %s field must be a valid currency (MYR, VND, USD).', $param), ['status' => 400]);
     }
+
+    public static function validate_number($value, $request, $param)
+    {
+        // Check if the value exists (not null or empty)
+        if (is_null($value) || $value === '') {
+            return new \WP_Error('rest_invalid_param', sprintf('The %s field is required.', $param), ['status' => 400]);
+        }
+
+        // Validate if the value is numeric
+        if (is_numeric($value)) {
+            return true;
+        }
+
+        // If it's not numeric, return an error
+        return new \WP_Error('rest_invalid_param', sprintf('The %s field must be a valid number.', $param), ['status' => 400]);
+    }
 }

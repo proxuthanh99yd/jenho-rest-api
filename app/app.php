@@ -1,6 +1,5 @@
 <?php
 add_action('woocommerce_init', function () {
-
     // Khởi tạo các dịch vụ và controller
     $authService = new \Okhub\Service\AuthService();
     $authController = new \Okhub\Controller\AuthController($authService);
@@ -23,7 +22,7 @@ add_action('woocommerce_init', function () {
     $paymentService = new \Okhub\Service\PaymentService();
     $paymentController = new \Okhub\Controller\PaymentController($paymentService);
 
-    $wishlistService = new \Okhub\Service\WishlistService();
+    $wishlistService = new \Okhub\Service\WishlistService($productService);
     $wishlistController = new \Okhub\Controller\WishlistController($wishlistService, $authService);
 
     // Create a global instance of OrderService

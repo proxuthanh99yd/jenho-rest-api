@@ -19,24 +19,20 @@ function mytheme_add_woocommerce_support()
 add_action('after_setup_theme', 'mytheme_add_woocommerce_support');
 // Load the app
 require_once plugin_dir_path(__FILE__) . '/app/app.php';
+require_once plugin_dir_path(__FILE__) . '/app/src/Database/create_wishlist_tables.php';
 
-// function testApiAction () {
-// 	add_menu_page (
-// 		"Test Custom Woo",
-// 		"Test Custom Woo",
-// 		'manage_options',
-// 		'testApiAction',
-// 		'fnc_testApiAction',
-// 		'',
-// 		'100'
-// 	);
-// }
-// add_action('admin_menu', 'testApiAction');
-// function fnc_testApiAction () {
-// 	$WC_Cart = new WC_Cart();
-// 	$WC_Cart->add_to_cart(272, 1);
-	
-// 	echo "<pre>";
-// 	var_dump($WC_Cart);
-// 	echo "</pre>";
-// }
+function when_plugin_activate()
+{
+    // Gọi hàm để tạo bảng wishlist
+    \Okhub\Database\CreateWishlistTables::create();
+}
+
+// Đăng ký hàm kích hoạt cho plugin
+register_activation_hook(__FILE__, 'when_plugin_activate');
+
+function when_plugin_deactivate()
+{
+    // Gọi hàm xoá bảng wishlist
+    \Okhub\Database\CreateWishlistTables::drop();
+}
+register_deactivation_hook(__FILE__, 'when_plugin_deactivate');
