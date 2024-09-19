@@ -17,7 +17,7 @@ class Wishlist
     {
         global $wpdb;
         $table = $wpdb->prefix . 'wishlist';
-        return $wpdb->get_results($wpdb->prepare("SELECT * FROM $table WHERE user_id = %d", $user_id));
+        return $wpdb->get_results($wpdb->prepare("SELECT * FROM $table WHERE user_id = %d", $user_id), ARRAY_A);
     }
 
     public static function create_wishlist($data)
