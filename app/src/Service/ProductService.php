@@ -57,7 +57,7 @@ class ProductService
 
             if (!empty($args['colors'])) {
                 $taxQuery[] = [
-                    'taxonomy' => 'pa_color', // Product attribute for color
+                    'taxonomy' => 'pa_colours', // Product attribute for color
                     'field' => 'slug',
                     'terms' => $args['colors'],
                 ];
