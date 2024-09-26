@@ -373,6 +373,7 @@ class ProductService
             $term = get_term_by('slug', $value, str_replace('attribute_', '', $key), 'ARRAY_A');
             if ($term) {
                 if ($term['taxonomy'] === 'pa_colours') {
+                    $term['taxonomy'] = 'pa_color';
                     $term['hex_color'] = get_field('color_hex_color_codes', $term['taxonomy'] . '_' . $term['term_id']);
                 }
                 unset($term["term_group"], $term["description"], $term["parent"], $term["count"], $term["filter"]);
