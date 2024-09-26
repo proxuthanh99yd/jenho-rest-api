@@ -16,7 +16,20 @@ class WishlistService
     }
     public function get_user_wishlist($user_id)
     {
-        return Wishlist::get_all_wishlists_by_user($user_id);
+        $wishlist = Wishlist::get_all_wishlist_by_user($user_id);
+        if (!$wishlist) {
+            return new WP_Error('wishlist_not_found', 'Wishlist not found', ['status' => 404]);
+        }
+        $data = [];
+        foreach ($wishlist as $value) {
+            $product = array_merge($value, $this->productService->getProduct($value['product_id']));
+            unset($product['ID']);
+            unset($product['user_id']);
+            unset($product['quantity']);
+            unset($product['product_id']);
+            $data[] = $product;
+        }
+        return $data;
     }
 
     public function add_to_wishlist($product_id, $variation_id, $quantity, $userId)
@@ -43,6 +56,11 @@ class WishlistService
             }
         }
 
+        // Kiểm tra sự tồn tại của wishlist
+        if ($this->item_exists($wishlist_id, $product_id, $variation_id)) {
+            return new WP_Error('item_exists', 'Item already exists in wishlist', ['status' => 409]);
+        }
+
         // Thêm sản phẩm vào wishlist
         $wishlist_item = WishlistItem::add_item_to_wishlist($data);
         if (!$wishlist_item) {
@@ -66,6 +84,19 @@ class WishlistService
         $wishlist = $this->get_items_by_wishlist($wishlist['ID']);
     }
 
+    public function remove_from_wishlist($item_id, $userId)
+    {
+        $wishlist = $this->find_wishlist_by_user_id($userId);
+        if (!$wishlist) {
+            return new WP_Error('wishlist_not_found', 'Wishlist not found', ['status' => 404]);
+        }
+        $wishlist_item = WishlistItem::delete_item_by_id($item_id);
+        if (!$wishlist_item) {
+            return new WP_Error('wishlist_item_not_found', 'Wishlist item not found', ['status' => 404]);
+        }
+        return $wishlist_item;
+    }
+
     private function find_wishlist_by_user_id($user_id)
     {
         $wishlist = Wishlist::get_single_wishlist_by_user($user_id); // Lấy một wishlist duy nhất
@@ -85,5 +116,10 @@ class WishlistService
     private function get_items_by_wishlist($wishlist_id)
     {
         return WishlistItem::get_items_by_wishlist($wishlist_id);
+    }
+
+    private function item_exists($wishlist_id, $product_id, $variation_id)
+    {
+        return WishlistItem::item_exists($wishlist_id, $product_id, $variation_id);
     }
 }

@@ -34,6 +34,14 @@ class WishlistController extends WP_REST_Controller
             ],
         ]);
 
+        register_rest_route($this->namespace, '/' . $this->rest_base, [
+            [
+                'methods' => 'DELETE',
+                'callback' => [$this, 'get_wishlist'],
+                'permission_callback' => array($this, 'bearerTokenAuth')
+            ],
+        ]);
+
         register_rest_route($this->namespace, '/' . $this->rest_base . '/items', [
             [
                 'methods' => 'POST',
@@ -81,7 +89,7 @@ class WishlistController extends WP_REST_Controller
         if (!$userId) {
             return new WP_Error('unauthorized', 'You are not logged in', ['status' => 401]);
         }
-        return $this->wishlistService->get_wishlist_by_user_id($userId);
+        return $this->wishlistService->get_user_wishlist($userId);
     }
 
     // // Tạo wishlist mới
@@ -91,7 +99,7 @@ class WishlistController extends WP_REST_Controller
         $variation_id = $request->get_param('variation_id');
         $quantity = $request->get_param('quantity');
 
-        if (!$product_id || !$variation_id || !($quantity)) {
+        if (!$product_id || !($variation_id >= 0)  || !$quantity) {
             return new WP_Error('missing_params', 'Missing required parameters', ['status' => 400]);
         }
 
@@ -101,6 +109,22 @@ class WishlistController extends WP_REST_Controller
         }
 
         return $this->wishlistService->add_to_wishlist($product_id, $variation_id, $quantity, $userId);
+    }
+
+    // Xóa wishlist
+    public function remove_from_wishlist(WP_REST_Request $request)
+    {
+        $item_id = $request->get_param('item_id');
+        if (!$item_id) {
+            return new WP_Error('missing_params', 'Missing required parameters', ['status' => 400]);
+        }
+
+        $userId = get_current_user_id();
+        if (!$userId) {
+            return new WP_Error('unauthorized', 'You are not logged in', ['status' => 401]);
+        }
+
+        return $this->wishlistService->remove_from_wishlist($item_id, $userId);
     }
 
     /**
