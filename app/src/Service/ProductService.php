@@ -461,7 +461,7 @@ class ProductService
      */
     public function exchangePrice($currency, $price)
     {
-        if (array_key_exists($currency, $this->currency_return) && !isset($this->currency_return_reverse[$currency])) {
+        if (!array_key_exists($currency, $this->currency_return) && !isset($this->currency_return_reverse[$currency])) {
             return $price;
         }
         error_log("price" . json_encode($price));
