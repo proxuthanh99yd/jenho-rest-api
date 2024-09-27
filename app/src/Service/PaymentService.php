@@ -107,6 +107,7 @@ class PaymentService
         }
         $ratio = get_field($this->currency_return_reverse[$currency], 'option');
         error_log("ratio " . $ratio);
+        error_log("price " . $price);
         $after_exchange = $price * $ratio;
         return round($after_exchange, 2);
     }
