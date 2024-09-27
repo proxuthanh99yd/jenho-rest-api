@@ -124,15 +124,12 @@ class ProductService
                     'id' => $product->get_id(),
                     'name' => $product->get_name(),
                     'slug' => $product->get_slug(),
-                    'price' => $this->exchangePrice(
-                        $args['currency'],
-                        intval($this->getPrice($product->get_id()))
-                    ),
+                    'price' => intval($this->getPrice($product->get_id(), $args['currency'])),
                     'currency' => $args['currency'],
-                    'regular_price' => $this->exchangePrice($args['currency'], intval($this->getRegularPrice($product->get_id()))),
+                    'regular_price' => intval($this->getRegularPrice($product->get_id(), $args['currency'])),
                     'image' => wp_get_attachment_url($product->get_image_id()),
                     'video' => $this->getVideo($product->get_id()),
-                    'variations' => $this->getVariations($product),
+                    'variations' => $this->getVariations($product, $args['currency']),
                 ];
             }
         }
