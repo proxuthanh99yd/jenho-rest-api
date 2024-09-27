@@ -14,6 +14,11 @@ class ProductService
         'MYR' => 'jenho-malaysia',
         'VND' => 'jenho-viet-nam',
     ];
+
+    private $currency_return = [
+        'MYR' => 'jenho-malaysia',
+        'VND' => 'jenho-viet-nam',
+    ];
     /**
      * Retrieves a list of products based on given arguments.
      *
@@ -415,7 +420,7 @@ class ProductService
         // Check if terms are found and there are no errors
         if (!is_wp_error($terms) && !empty($terms)) {
             foreach ($terms as $term) {
-                $key = array_search($term->slug, $this->currency);
+                $key = array_search($term->slug, $this->currency_return);
                 if ($key) {
                     return $key;
                 }

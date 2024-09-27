@@ -77,7 +77,6 @@ class OrderService
                 $customizeFields = $item['customize'] ?? [];
                 $product = wc_get_product($product_id); // Retrieve the product object
 
-
                 if (!$product) {
                     // Return error if product is invalid
                     return new WP_Error('invalid_product', __('Invalid product ID: ' . $product_id), array('status' => 400));
@@ -147,6 +146,22 @@ class OrderService
             $formattedDate = $date->format('Y-m-d');
             $order->update_meta_data('date_of_birth', wc_clean($formattedDate));
             $order->calculate_totals();
+
+            $order_total = $order->get_total(); // Lấy tổng giá trị đơn hàng
+            if ($currency === "VND") {
+                $shipping_fee_data = get_field("viet_nam_shipping_fee", "option");
+                $threshold = $shipping_fee_data['under']; // Giá trị ngưỡng để miễn phí vận chuyển
+                if ($order_total < $threshold) {
+                    $shipping_fee = $shipping_fee_data['fee']; // Số tiền phí vận chuyển
+                    $fee = new \WC_Order_Item_Fee();
+                    $fee->set_name('Shipping Fee');
+                    $fee->set_amount($shipping_fee);
+                    $fee->set_total($shipping_fee);
+                    $order->add_item($fee);
+                    $order->calculate_totals(); // Cập nhật lại tổng đơn hàng sau khi thêm phí
+                }
+            }
+
             $order_id = $order->save(); // Save order and get order ID
 
             // Schedule an email to be sent after a delay (e.g., 1 minute)
@@ -313,6 +328,11 @@ class OrderService
         // Format and return order data
         $items = [];
         foreach ($order->get_items() as $item_id => $item) {
+            $customize_fee = wc_get_order_item_meta($item_id, '_custom_line_item_field_fee', true);
+            if (!empty($customize_fee)) {
+                $item->set_total($item->get_total() + $customize_fee);
+                $item->set_subtotal($item->get_subtotal() + $customize_fee);
+            }
             $items[] = array(
                 'product' => $this->productService->getProduct($item->get_product_id()), // Product ID
                 'variation' => $this->productService->getVariationById($item->get_product_id(), $item->get_variation_id()), // Variation ID if applicable
