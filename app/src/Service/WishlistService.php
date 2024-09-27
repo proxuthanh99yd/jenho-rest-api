@@ -14,7 +14,7 @@ class WishlistService
     {
         $this->productService = $productService;
     }
-    public function get_user_wishlist($user_id)
+    public function get_user_wishlist($user_id, $currency)
     {
         $wishlist = Wishlist::get_all_wishlist_by_user($user_id);
         if (!$wishlist) {
@@ -22,7 +22,7 @@ class WishlistService
         }
         $data = [];
         foreach ($wishlist as $value) {
-            $product = array_merge($value, $this->productService->getProduct($value['product_id']));
+            $product = array_merge($value, $this->productService->getProduct($value['product_id'], $currency));
             unset($product['ID']);
             unset($product['user_id']);
             unset($product['quantity']);
@@ -32,7 +32,7 @@ class WishlistService
         return $data;
     }
 
-    public function add_to_wishlist($product_id, $variation_id, $quantity, $userId)
+    public function add_to_wishlist($product_id, $variation_id, $quantity, $userId, $currency)
     {
         $wishlist_id = $this->find_wishlist_by_user_id($userId);
         $data = [
@@ -43,14 +43,14 @@ class WishlistService
         ];
 
         // Kiểm tra sản phẩm có tồn tại không
-        $product = $this->productService->getProduct($product_id);
+        $product = $this->productService->getProduct($product_id, $currency);
         if (!$product) {
             return new WP_Error('product_not_found', 'Product not found', ['status' => 404]);
         }
 
         // Nếu có variation_id, kiểm tra sự tồn tại của biến thể
         if ($variation_id > 0) {
-            $product_variation = $this->productService->getVariationById($product['id'], $variation_id);
+            $product_variation = $this->productService->getVariationById($product['id'], $variation_id, $currency);
             if (!$product_variation) {
                 return new WP_Error('variation_not_found', 'Variation not found', ['status' => 404]);
             }

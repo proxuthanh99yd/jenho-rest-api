@@ -86,14 +86,15 @@ class WishlistController extends WP_REST_Controller
     public function get_wishlist(WP_REST_Request $request)
     {
         $userId = get_current_user_id();
+        $currency = $request->get_param('currency');
         if (!$userId) {
             return new WP_Error('unauthorized', 'You are not logged in', ['status' => 401]);
         }
-        return $this->wishlistService->get_user_wishlist($userId);
+        return $this->wishlistService->get_user_wishlist($userId, $currency);
     }
 
     // // Tạo wishlist mới
-    public function add_to_wishlist(WP_REST_Request $request)
+    public function add_to_wishlist(WP_REST_Request $request, $currency)
     {
         $product_id = $request->get_param('product_id');
         $variation_id = $request->get_param('variation_id');
@@ -108,7 +109,7 @@ class WishlistController extends WP_REST_Controller
             return new WP_Error('unauthorized', 'You are not logged in', ['status' => 401]);
         }
 
-        return $this->wishlistService->add_to_wishlist($product_id, $variation_id, $quantity, $userId);
+        return $this->wishlistService->add_to_wishlist($product_id, $variation_id, $quantity, $userId, $currency);
     }
 
     // Xóa wishlist

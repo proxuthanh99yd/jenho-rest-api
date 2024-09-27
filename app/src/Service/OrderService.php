@@ -335,7 +335,7 @@ class OrderService
             }
             $items[] = array(
                 'product' => $this->productService->getProduct($item->get_product_id(), $currency), // Product ID
-                'variation' => $this->productService->getVariationById($item->get_product_id(), $item->get_variation_id()), // Variation ID if applicable
+                'variation' => $this->productService->getVariationById($item->get_product_id(), $item->get_variation_id(), $currency), // Variation ID if applicable
                 'quantity' =>  $item->get_quantity(), // Quantity ordered
                 'subtotal' => $this->productService->exchangePrice($currency, $item->get_subtotal()), // Item subtotal
                 'total' => $this->productService->exchangePrice(

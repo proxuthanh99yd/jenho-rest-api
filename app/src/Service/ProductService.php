@@ -368,7 +368,17 @@ class ProductService
         return $product->get_regular_price();
     }
 
-    public function getVariationById(int $product, int $variation_id)
+    /**
+     * Retrieves a single product variation by its ID.
+     *
+     * @param int $product The ID of the product that owns the variation.
+     * @param int $variation_id The ID of the variation to retrieve.
+     * @param string $currency The currency to display prices in.
+     * @return array|null The formatted variation data or null if not found.
+     */
+
+
+    public function getVariationById(int $product, int $variation_id, $currency)
     {
         if (is_int($product)) $product = wc_get_product($product);
 
@@ -378,13 +388,13 @@ class ProductService
         // Loop through each variation and format its data
         foreach ($variations as $variation) {
             if ($variation['variation_id'] == $variation_id) {
-                return $this->formatVariation($variation);
+                return $this->formatVariation($variation, $currency);
             }
         }
         return null;
     }
 
-    private function formatVariation($variation)
+    private function formatVariation($variation, $currency)
     {
         $attributes = [];
         foreach ($variation['attributes'] as $key => $value) {
