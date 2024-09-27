@@ -466,7 +466,7 @@ class ProductService
         }
         error_log("price" . json_encode($price));
         $ratio = get_post_meta(10421, $this->currency_return_reverse[$currency], true);
-        error_log("ratio" . json_encode($$ratio));
+        error_log("ratio" . json_encode($ratio));
         $after_exchange = $price * $ratio;
         return round($after_exchange, 2);
     }
