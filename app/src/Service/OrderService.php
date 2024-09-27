@@ -68,7 +68,6 @@ class OrderService
             $order->set_payment_method($paymentMethod);
             $total_fee = 0;
             // Loop through items to add them to the order
-            $currency = null;
 
             foreach ($items as $item) {
                 $product_id = $item['product_id'];

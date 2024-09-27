@@ -464,9 +464,7 @@ class ProductService
         if (!array_key_exists($currency, $this->currency_return) && !isset($this->currency_return_reverse[$currency])) {
             return $price;
         }
-        error_log("price" . json_encode($price));
-        $ratio = get_post_meta(10421, $this->currency_return_reverse[$currency], true);
-        error_log("ratio" . json_encode($ratio));
+        $ratio = get_field($this->currency_return_reverse[$currency], 'option');
         $after_exchange = $price * $ratio;
         return round($after_exchange, 2);
     }
