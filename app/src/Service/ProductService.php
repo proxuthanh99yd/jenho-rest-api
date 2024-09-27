@@ -230,9 +230,9 @@ class ProductService
             'id' => $product->get_id(),
             'name' => $product->get_name(),
             'slug' => $product->get_slug(),
-            'price' => intval($this->getPrice($product->get_id(), $currency)),
+            'price' => $this->getPrice($product->get_id(), $currency),
             'currency' => $currency,
-            'regular_price' =>  intval($this->getRegularPrice($product->get_id(), $currency)),
+            'regular_price' =>  $this->getRegularPrice($product->get_id(), $currency),
             'descriptions' => get_field('product_details', $product->get_id()),
             'sku' => $product->get_sku(),
             'stock' => $product->get_stock_quantity(),
@@ -359,7 +359,7 @@ class ProductService
                 // return $variation;
             }
         }
-        return $product->get_regular_price();
+        return $this->exchangePrice($currency, $product->get_regular_price());
     }
 
     /**
