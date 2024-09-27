@@ -10,7 +10,7 @@ class ProductService
 {
 
     private $currency = [
-        // 'USD' => '$',
+        'USD' => 'jenho-malaysia',
         'MYR' => 'jenho-malaysia',
         'VND' => 'jenho-viet-nam',
     ];
