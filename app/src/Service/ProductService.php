@@ -235,7 +235,10 @@ class ProductService
             'slug' => $product->get_slug(),
             'price' => $this->exchangePrice($currency, intval($this->getPrice($product->get_id()))),
             'currency' => $currency,
-            'regular_price' => intval($this->getRegularPrice($product->get_id())),
+            'regular_price' => $this->exchangePrice(
+                $currency,
+                intval($this->getRegularPrice($product->get_id()))
+            ),
             'descriptions' => get_field('product_details', $product->get_id()),
             'sku' => $product->get_sku(),
             'stock' => $product->get_stock_quantity(),
