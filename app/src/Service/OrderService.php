@@ -56,7 +56,7 @@ class OrderService
      * @param string|null $couponCode An optional coupon code to apply to the order.
      * @return array|WP_Error Returns formatted order data or a WP_Error on failure.
      */
-    public function createOrder($customerId, $paymentMethod, $shippingAddress, $billingAddress, $items, $couponCode = null)
+    public function createOrder($customerId, $paymentMethod, $shippingAddress, $billingAddress, $items, $couponCode = null, $currency)
     {
         try {
             $order = wc_create_order(); // Create a new WooCommerce order object
@@ -170,7 +170,7 @@ class OrderService
             }
 
             // Return formatted order data or an error if creation fails
-            return $order_id ? $this->formatOrderData($order) : new WP_Error('order_creation_failed', __('Order creation failed'), array('status' => 500));
+            return $order_id ? $this->formatOrderData($order, $currency) : new WP_Error('order_creation_failed', __('Order creation failed'), array('status' => 500));
         } catch (\Exception $e) {
             // Return error if an exception occurs during order creation
             return new WP_Error('order_creation_exception', $e->getMessage(), array('status' => 500));
@@ -183,7 +183,7 @@ class OrderService
      * @param int $orderId The ID of the order to retrieve.
      * @return array|WP_Error Returns formatted order data or a WP_Error if the order is not found.
      */
-    public function getOrderById($orderId)
+    public function getOrderById($orderId, $currency)
     {
         $order = wc_get_order($orderId); // Retrieve the order object by ID
 
@@ -193,7 +193,7 @@ class OrderService
         }
 
         // Format and return the order data
-        return $this->formatOrderData($order);
+        return $this->formatOrderData($order, $currency);
     }
 
     /**
@@ -203,7 +203,7 @@ class OrderService
      * @param array $args Optional arguments to filter and paginate the orders.
      * @return array Returns a list of formatted orders.
      */
-    public function getAllOrders($userId, $args = [])
+    public function getAllOrders($userId, $args = [], $currency)
     {
         // Set default arguments for retrieving orders
         $defaultArgs = [
@@ -225,7 +225,7 @@ class OrderService
         // Format each order using the formatOrderData method
         $formattedOrders = [];
         foreach ($orders as $order) {
-            $formattedOrders[] = $this->formatOrderData($order);
+            $formattedOrders[] = $this->formatOrderData($order, $currency);
         }
 
         // Return the list of formatted orders
@@ -239,7 +239,7 @@ class OrderService
      * @param array $args Optional arguments for pagination (limit and page).
      * @return array Returns a list of formatted orders for the specified email.
      */
-    public function getAllOrdersByEmail($email, $args = [])
+    public function getAllOrdersByEmail($email, $args = [], $currency)
     {
         // Set default arguments for retrieving orders
         $defaultArgs = [
@@ -261,7 +261,7 @@ class OrderService
         // Format each order using the formatOrderData method
         $formattedOrders = [];
         foreach ($orders as $order) {
-            $formattedOrders[] = $this->formatOrderData($order);
+            $formattedOrders[] = $this->formatOrderData($order, $currency);
         }
 
         // Return the list of formatted orders
@@ -276,7 +276,7 @@ class OrderService
      * @param string $phone
      * @return array|WP_Error
      */
-    public function cancelOrder($order_id, $email, $phone)
+    public function cancelOrder($order_id, $email, $phone, $currency)
     {
         // Validate input parameters
         if (!$order_id || !$email || !$phone) {
@@ -314,7 +314,7 @@ class OrderService
         }
 
         // Return the updated order data
-        return $this->formatOrderData($order);
+        return $this->formatOrderData($order, $currency);
     }
 
     /**
@@ -323,7 +323,7 @@ class OrderService
      * @param WC_Order $order The WooCommerce order object to format.
      * @return array The formatted order data.
      */
-    private function formatOrderData($order)
+    private function formatOrderData($order, $currency)
     {
         // Format and return order data
         $items = [];
@@ -336,9 +336,12 @@ class OrderService
             $items[] = array(
                 'product' => $this->productService->getProduct($item->get_product_id()), // Product ID
                 'variation' => $this->productService->getVariationById($item->get_product_id(), $item->get_variation_id()), // Variation ID if applicable
-                'quantity' => $item->get_quantity(), // Quantity ordered
-                'subtotal' => $item->get_subtotal(), // Item subtotal
-                'total' => $item->get_total(), // Item total
+                'quantity' =>  $item->get_quantity(), // Quantity ordered
+                'subtotal' => $this->productService->exchangePrice($currency, $item->get_subtotal()), // Item subtotal
+                'total' => $this->productService->exchangePrice(
+                    $currency,
+                    $item->get_total()
+                ), // Item total
                 'customize' => $this->get_custom_fields($item_id), // Customizations
             );
         }
@@ -390,8 +393,14 @@ class OrderService
         return array(
             'id' => $order->get_id(), // Order ID
             'status' => $order->get_status(), // Order status
-            'total' => $order->get_total(), // Order total amount
-            'subtotal' => $order->get_subtotal(), // Order subtotal
+            'total' => $this->productService->exchangePrice(
+                $currency,
+                $order->get_total()
+            ), // Order total amount
+            'subtotal' => $this->productService->exchangePrice(
+                $currency,
+                $order->get_subtotal()
+            ), // Order subtotal
             'date_created' => $order->get_date_created()->date('Y-m-d H:i:s'), // Order creation date
             'items' => $items, // Iterate over each item in the order
             'order_info' => $order_info

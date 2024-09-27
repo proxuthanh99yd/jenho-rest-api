@@ -10,6 +10,7 @@ class ProductService
 {
 
     private $currency = [
+        'SGD' => 'jenho-malaysia',
         'USD' => 'jenho-malaysia',
         'MYR' => 'jenho-malaysia',
         'VND' => 'jenho-viet-nam',
@@ -19,6 +20,12 @@ class ProductService
         'MYR' => 'jenho-malaysia',
         'VND' => 'jenho-viet-nam',
     ];
+
+    private $currency_return_reverse = [
+        'USD' => 'exchange_to_usd',
+        'SGD' => 'exchange_to_singapore',
+    ];
+
     /**
      * Retrieves a list of products based on given arguments.
      *
@@ -117,9 +124,12 @@ class ProductService
                     'id' => $product->get_id(),
                     'name' => $product->get_name(),
                     'slug' => $product->get_slug(),
-                    'price' => intval($this->getPrice($product->get_id())),
-                    'currency' => $this->getCurrencyByProductId($product->get_id()),
-                    'regular_price' => intval($this->getRegularPrice($product->get_id())),
+                    'price' => $this->exchangePrice(
+                        $args['currency'],
+                        intval($this->getPrice($product->get_id()))
+                    ),
+                    'currency' => $args['currency'],
+                    'regular_price' => $this->exchangePrice($args['currency'], intval($this->getRegularPrice($product->get_id()))),
                     'image' => wp_get_attachment_url($product->get_image_id()),
                     'video' => $this->getVideo($product->get_id()),
                     'variations' => $this->getVariations($product),
@@ -171,13 +181,13 @@ class ProductService
      * @param int $productId The ID of the product to retrieve.
      * @return array|WP_Error Returns formatted product data or an error if not found.
      */
-    public function getProduct($productId)
+    public function getProduct($productId, $currency)
     {
         $product = wc_get_product($productId);
         if (!$product) {
             return false;
         }
-        return $this->formatSingleProduct($product);
+        return $this->formatSingleProduct($product, $currency);
     }
 
     /**
@@ -186,7 +196,7 @@ class ProductService
      * @param string $slug The slug or SKU of the product.
      * @return array|WP_Error Returns formatted product data or an error if not found.
      */
-    public function getProductBySlug($slug)
+    public function getProductBySlug($slug, $currency)
     {
         // Fetch product ID by SKU first
         $product_id = wc_get_product_id_by_sku($slug);
@@ -208,7 +218,7 @@ class ProductService
             return new WP_Error('product_not_found', __('Product not found'), array('status' => 404));
         }
 
-        return $this->formatSingleProduct($product);
+        return $this->formatSingleProduct($product, $currency);
     }
 
     /**
@@ -217,14 +227,14 @@ class ProductService
      * @param WC_Product $product The product object to format.
      * @return array The formatted product data.
      */
-    private function formatSingleProduct(WC_Product $product)
+    private function formatSingleProduct(WC_Product $product, $currency)
     {
         $response = array(
             'id' => $product->get_id(),
             'name' => $product->get_name(),
             'slug' => $product->get_slug(),
-            'price' => intval($this->getPrice($product->get_id())),
-            'currency' => $this->getCurrencyByProductId($product->get_id()),
+            'price' => $this->exchangePrice($currency, intval($this->getPrice($product->get_id()))),
+            'currency' => $currency,
             'regular_price' => intval($this->getRegularPrice($product->get_id())),
             'descriptions' => get_field('product_details', $product->get_id()),
             'sku' => $product->get_sku(),
@@ -429,5 +439,23 @@ class ProductService
 
         // Return false if no categories are found or an error occurs
         return false;
+    }
+
+    /**
+     * Exchanges a given price in the default currency to the specified currency.
+     *
+     * @param string $currency The currency to exchange the price to.
+     * @param float $price The price to exchange.
+     *
+     * @return float The exchanged price.
+     */
+    public function exchangePrice($currency, $price)
+    {
+        if (array_key_exists($currency, $this->currency_return) && !isset($this->currency_return_reverse[$currency])) {
+            return $price;
+        }
+        $ratio = get_field($this->currency_return_reverse[$currency], 'option');
+        $after_exchange = $price * $ratio;
+        return round($after_exchange, 2);
     }
 }

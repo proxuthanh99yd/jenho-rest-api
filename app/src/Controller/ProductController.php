@@ -77,9 +77,10 @@ class ProductController
     {
         // Retrieve the product ID from the request
         $productId = $request->get_param('id');
+        $currency = $request->get_param('currency') ?? "MYR";
 
         // Fetch the product using the ProductService
-        $product = $this->productService->getProduct($productId);
+        $product = $this->productService->getProduct($productId, $currency);
 
         if (!$product) {
             return new WP_Error('product_not_found', __('Product not found'), array('status' => 404));
@@ -99,7 +100,7 @@ class ProductController
     {
         // Set up arguments for the product query with default values
         $args = array(
-            'currency' => $request->get_param('currency') ?: null, // Currency to display prices in
+            'currency' => $request->get_param('currency') ?: "MYR", // Currency to display prices in
             'limit' => $request->get_param('limit') ?: 10,  // Number of products per page
             'page' => $request->get_param('page') ?: 1, // Current page number
             'offset' => $request->get_param('offset') ?: null, // Offset for pagination
@@ -141,7 +142,7 @@ class ProductController
     {
         $slug = $request->get_param('slug');
         $args = array(
-            'currency' => $request->get_param('currency') ?: null, // Currency to display prices in
+            'currency' => $request->get_param('currency') ?: "MYR", // Currency to display prices in
             'limit' => $request->get_param('limit') ?: 10,  // Number of products per page
             'page' => $request->get_param('page') ?: 1, // Current page number
             'offset' => $request->get_param('offset') ?: null, // Offset for pagination
@@ -160,9 +161,9 @@ class ProductController
     {
         // Retrieve the product slug from the request
         $slug = $request->get_param('slug');
-
+        $currency = $request->get_param('currency');
         // Fetch the product by slug using ProductService
-        $product = $this->productService->getProductBySlug($slug);
+        $product = $this->productService->getProductBySlug($slug, $currency);
 
         // Check if the product fetch resulted in an error
         if (is_wp_error($product)) {

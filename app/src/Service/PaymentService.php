@@ -14,6 +14,15 @@ class PaymentService
     private $pymtMethod = "ANY";
     private $merchantReturnUrl = "https://jenho.cms.okhub-tech.com/return";
     private $currencyCode = "MYR";
+    private $currency_return = [
+        'MYR' => 'jenho-malaysia',
+        'VND' => 'jenho-viet-nam',
+    ];
+
+    private $currency_return_reverse = [
+        'USD' => 'exchange_to_usd',
+        'SGD' => 'exchange_to_singapore',
+    ];
 
     public function getPaymentGateway(WP_REST_Request $request, $custIp)
     {
@@ -29,6 +38,7 @@ class PaymentService
 
         $data = $order->get_data();
         $paymentID = "JENHO" . substr($timestamp, -6) . $orderId;
+
         return [
             'payment_url' => $this->action . '?' . http_build_query([
                 'TransactionType' => $this->transactionType,
@@ -38,7 +48,7 @@ class PaymentService
                 'OrderNumber' => $orderId,
                 'PaymentDesc' => "JENHO Payment for #" . $orderId,
                 'MerchantReturnURL' => $this->merchantReturnUrl,
-                'Amount' => $this->formatAmount($order->get_total()),
+                'Amount' => $this->formatAmount($this->exchangePrice($this->currencyCode, $order->get_total())),
                 'CurrencyCode' => $this->currencyCode,
                 'CustName' => $data['billing']['first_name'] . " " . $data['billing']['last_name'],
                 'CustEmail' => $data['billing']['email'],
@@ -49,7 +59,10 @@ class PaymentService
                     $this->serviceId,
                     $paymentID,
                     $this->merchantReturnUrl,
-                    $order->get_total(),
+                    $this->exchangePrice(
+                        $this->currencyCode,
+                        $order->get_total()
+                    ),
                     $this->currencyCode,
                     $custIp,
                     600
@@ -77,5 +90,23 @@ class PaymentService
         $PageTimeout
     ) {
         return hash('sha256', $Password . $ServiceID . $PaymentID . $MerchantReturnURL  . $this->formatAmount($Amount) . $CurrencyCode . $CustIP . $PageTimeout);
+    }
+
+    /**
+     * Exchanges a given price in the default currency to the specified currency.
+     *
+     * @param string $currency The currency to exchange the price to.
+     * @param float $price The price to exchange.
+     *
+     * @return float The exchanged price.
+     */
+    public function exchangePrice($currency, $price)
+    {
+        if (array_key_exists($currency, $this->currency_return) && !isset($this->currency_return_reverse[$currency])) {
+            return $price;
+        }
+        $ratio = get_field($this->currency_return_reverse[$currency], 'option');
+        $after_exchange = $price * $ratio;
+        return round($after_exchange, 2);
     }
 }

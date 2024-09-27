@@ -63,7 +63,7 @@ class CartService
     /**
      * Adds a product to the user's cart.
      */
-    public function addToCart($productId, $quantity = 1, $variation_id = 0)
+    public function addToCart($productId, $quantity = 1, $variation_id = 0, $currency)
     {
         // Kiểm tra xem WooCommerce giỏ hàng đã khởi tạo hay chưa
         if (!WC()->cart) {
@@ -107,7 +107,7 @@ class CartService
                 // Tăng số lượng sản phẩm trong giỏ hàng
                 $cart_data['cart'][$key]['quantity'] += $quantity;
                 update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
-                return $this->formatData($cart_data['cart'][$key], $product, $variation_id)[$product->get_type()]();
+                return $this->formatData($cart_data['cart'][$key], $product, $variation_id, $currency)[$product->get_type()]();
             } else {
                 if ($val['product_id'] != $productId) continue;
 
@@ -120,7 +120,7 @@ class CartService
                 // Tăng số lượng sản phẩm trong giỏ hàng
                 $cart_data['cart'][$key]['quantity'] += $quantity;
                 update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
-                return $this->formatData($cart_data['cart'][$key], $product)[$product->get_type()]();
+                return $this->formatData($cart_data['cart'][$key], $product, null, $currency)[$product->get_type()]();
             }
         }
 
@@ -136,13 +136,13 @@ class CartService
 
         // Cập nhật giỏ hàng trong cơ sở dữ liệu
         update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
-        return $this->formatData($cart_data['cart'][$cart_item_key], $product, $variation_id)[$product->get_type()]();
+        return $this->formatData($cart_data['cart'][$cart_item_key], $product, $variation_id, $currency)[$product->get_type()]();
     }
 
     /**
      * Updates the quantity of a specific item in the cart.
      */
-    public function updateToCart($cart_item_key, $quantity, $variation_id = null)
+    public function updateToCart($cart_item_key, $quantity, $variation_id = null, $currency)
     {
         if (!WC()->cart && function_exists('wc_load_cart')) {
             wc_load_cart();
@@ -191,14 +191,14 @@ class CartService
 
         // Return the updated cart item data
         // return $this->cartFormatData($cart_item, $product, $cart_item['variation_id']);
-        return $this->formatData($cart_item, $product, $variation_id)[$product->get_type()]();
+        return $this->formatData($cart_item, $product, $variation_id, $currency)[$product->get_type()]();
     }
 
 
     /**
      * Adds a customized product to the cart.
      */
-    public function addToCartCustom($productId, $quantity = 1, $customize)
+    public function addToCartCustom($productId, $quantity = 1, $customize, $currency)
     {
         if (!WC()->cart && function_exists('wc_load_cart')) {
             wc_load_cart();
@@ -218,7 +218,7 @@ class CartService
             if ($key === $cart_item_key) {
                 $cart_data['cart'][$key]['quantity'] += $quantity;
                 update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
-                return $this->formatData($cart_data['cart'][$key], $product)[$product->get_type()]();
+                return $this->formatData($cart_data['cart'][$key], $product, null, $currency)[$product->get_type()]();
                 // return $this->cartFormatData($cart_data['cart'][$key], $product);
             }
         }
@@ -236,13 +236,13 @@ class CartService
         update_user_meta($userId, '_woocommerce_persistent_cart_1', $cart_data);
 
         // return $this->cartFormatData($cart_data['cart'][$cart_item_key], $product);
-        return $this->formatData($cart_data['cart'][$cart_item_key], $product)[$product->get_type()]();
+        return $this->formatData($cart_data['cart'][$cart_item_key], $product, null, $currency)[$product->get_type()]();
     }
 
     /**
      * Retrieves a specific cart item by its key.
      */
-    public function getCartItemByKey($cartItemKey)
+    public function getCartItemByKey($cartItemKey, $currency)
     {
         $user_id = get_current_user_id();
         if (!$user_id) {
@@ -264,7 +264,7 @@ class CartService
 
         $variation_id = $cart_item['variation_id'] ?? null;
 
-        return $this->formatData($cart_item, $product, $variation_id)[$product->get_type()]();
+        return $this->formatData($cart_item, $product, $variation_id, $currency)[$product->get_type()]();
     }
 
     /**
@@ -294,7 +294,7 @@ class CartService
     /**
      * Retrieves all cart items for the current user.
      */
-    public function getCartItems()
+    public function getCartItems($currency)
     {
         $user_id = get_current_user_id();
         if (!$user_id) {
@@ -307,14 +307,14 @@ class CartService
             return new WP_Error('no_cart', 'No cart found for the user', ['status' => 404]);
         }
 
-        $cart_items = array_filter(array_map(function ($cart_item) use ($session_data) {
+        $cart_items = array_filter(array_map(function ($cart_item) use ($session_data, $currency) {
             $product = wc_get_product($cart_item['product_id']);
             if (!$product) {
                 return null;
             }
 
             $variation_id = $cart_item['variation_id'] ?? null;
-            $formatted_item = $this->formatData($cart_item, $product, $variation_id)[$product->get_type()]();
+            $formatted_item = $this->formatData($cart_item, $product, $variation_id, $currency)[$product->get_type()]();
             // $formatted_item = $this->cartFormatData($cart_item, $product, $variation_id);
             // Assuming created_at is stored in $cart_item or needs to be fetched in some way
             $formatted_item['created_at'] = $cart_item['created_at'] ?? null;
@@ -390,7 +390,7 @@ class CartService
         return false;
     }
 
-    private function formatData($data, $product, $variation_id = null)
+    private function formatData($data, $product, $variation_id = null, $currency)
     {
         unset($data['line_tax_data']);
         unset($data['line_subtotal']);
@@ -399,34 +399,33 @@ class CartService
         unset($data['line_tax']);
 
         return [
-            'simple' => function () use ($data, $product) {
-                return  $this->simpleProductFormat($data, $product);
+            'simple' => function () use ($data, $product, $currency) {
+                return  $this->simpleProductFormat($data, $product, $currency);
             },
             'variable' =>
-            function () use ($data, $product, $variation_id) {
-                return  $this->variableProductFormat($data, $product, $variation_id);
+            function () use ($data, $product, $variation_id, $currency) {
+                return  $this->variableProductFormat($data, $product, $variation_id, $currency);
             },
         ];
     }
 
-    private function simpleProductFormat($data, $product)
+    private function simpleProductFormat($data, $product, $currency)
     {
-
         return array_merge($data, array(
-            'product' => $this->productService->getProduct($product->get_id()),
+            'product' => $this->productService->getProduct($product->get_id(), $currency),
         ));
     }
 
-    private function variableProductFormat($data, $product, $variation_id = null)
+    private function variableProductFormat($data, $product, $variation_id = null, $currency)
     {
         if ($variation_id) {
             return array_merge($data, array(
-                'product' => $this->productService->getProduct($product->get_id()),
+                'product' => $this->productService->getProduct($product->get_id(), $currency),
                 'variation' => $this->productService->getVariationById($product->get_id(), $variation_id),
             ));
         } else {
             return array_merge($data, array(
-                'product' => $this->productService->getProduct($product->get_id()),
+                'product' => $this->productService->getProduct($product->get_id(), $currency),
             ));
         }
     }

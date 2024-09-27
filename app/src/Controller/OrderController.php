@@ -84,6 +84,8 @@ class OrderController
     public function createOrder(WP_REST_Request $request)
     {
         try {
+            $currency = $request->get_param('currency') ?? "MYR";
+
             // Authenticate request
             $this->bearerTokenAuth($request);
 
@@ -144,7 +146,7 @@ class OrderController
                 // Build the items array from cart items
                 $items = [];
                 foreach ($cartItemKeys as $item) {
-                    $cart = $this->cartService->getCartItemByKey($item);
+                    $cart = $this->cartService->getCartItemByKey($item, $currency);
                     if (is_array($cart)) {
                         $items[] = [
                             "product_id" => $cart['product_id'],
@@ -166,7 +168,7 @@ class OrderController
             }
 
             // Create the order
-            $order = $this->orderService->createOrder($customerId, $paymentMethod, $shippingAddress, $billingAddress, $items, $couponCode);
+            $order = $this->orderService->createOrder($customerId, $paymentMethod, $shippingAddress, $billingAddress, $items, $couponCode, $currency);
 
             // Check for errors in order creation
             if (is_wp_error($order)) {
@@ -196,8 +198,9 @@ class OrderController
     {
         $limit = $request->get_param('limit') ?: 10;
         $page = $request->get_param('page') ?: 1;
+        $currency = $request->get_param('currency') ?? "MYR";
         $userId = get_current_user_id();
-        $orders = $this->orderService->getAllOrders($userId, ['limit' => $limit, 'page' => $page]);
+        $orders = $this->orderService->getAllOrders($userId, ['limit' => $limit, 'page' => $page], $currency);
 
         if (is_wp_error($orders)) {
             return $orders;
@@ -217,7 +220,8 @@ class OrderController
         $limit = $request->get_param('limit') ?: 10;
         $page = $request->get_param('page') ?: 1;
         $email = $request->get_param('email');
-        $orders = $this->orderService->getAllOrdersByEmail($email, ['limit' => $limit, 'page' => $page]);
+        $currency = $request->get_param('currency') ?? "MYR";
+        $orders = $this->orderService->getAllOrdersByEmail($email, ['limit' => $limit, 'page' => $page], $currency);
 
         if (is_wp_error($orders)) {
             return $orders;
@@ -235,12 +239,12 @@ class OrderController
     public function getOrderById(WP_REST_Request $request)
     {
         $order_id = $request->get_param('order_id');
-
+        $currency = $request->get_param('currency') ?? "MYR";
         if (!$order_id) {
             return new WP_Error('no_order_id', __('Order ID is required'), array('status' => 400));
         }
 
-        $order = $this->orderService->getOrderById($order_id);
+        $order = $this->orderService->getOrderById($order_id, $currency);
 
         if (is_wp_error($order)) {
             return $order;
@@ -260,9 +264,9 @@ class OrderController
         $order_id = $request->get_param('order_id');
         $email = $request->get_param('email');
         $phone = $request->get_param('phone');
-
+        $currency = $request->get_param('currency') ?? "MYR";
         // Call the cancelOrder method in OrderService with email and phone validation
-        $result = $this->orderService->cancelOrder($order_id, $email, $phone);
+        $result = $this->orderService->cancelOrder($order_id, $email, $phone, $currency);
 
         // Check for errors
         if (is_wp_error($result)) {

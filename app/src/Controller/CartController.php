@@ -99,6 +99,7 @@ class CartController
     {
         $productId = $request->get_param('product_id');
         $variation_id = $request->get_param('variation_id');
+        $currency = $request->get_param('currency') ?? "MYR";
         $quantity = $request->get_param('quantity') || $request->get_param('quantity') <= 0 ? $request->get_param('quantity') : 1;
 
         if (!$variation_id && $variation_id !== 0) {
@@ -108,7 +109,7 @@ class CartController
             return new WP_Error('no_product_id', __('Product ID is required'), array('status' => 400));
         }
 
-        return $this->cartService->addToCart($productId, $quantity, $variation_id);
+        return $this->cartService->addToCart($productId, $quantity, $variation_id, $currency);
     }
 
     /**
@@ -120,6 +121,7 @@ class CartController
     public function updateToCart(WP_REST_Request $request)
     {
         $variation_id = $request->get_param('variation_id');
+        $currency = $request->get_param('currency') ?? "MYR";
         $quantity = $request->get_param('quantity') || $request->get_param('quantity') <= 0 ? $request->get_param('quantity') : 1;
         $cartItemKey = $request->get_param('cart_item_key');
 
@@ -127,7 +129,7 @@ class CartController
             return new WP_Error('no_cart_item_key', __('Cart item key is required'), array('status' => 400));
         }
 
-        return $this->cartService->updateToCart($cartItemKey, $quantity, $variation_id);
+        return $this->cartService->updateToCart($cartItemKey, $quantity, $variation_id, $currency);
     }
 
     /**
@@ -139,6 +141,7 @@ class CartController
     public function addToCartCustom(WP_REST_Request $request)
     {
         $productId = $request->get_param('product_id');
+        $currency = $request->get_param('currency') ?? "MYR";
         $quantity = $request->get_param('quantity') || $request->get_param('quantity') <= 0 ? $request->get_param('quantity') : 1;
         $customize = $request->get_param('customize');
 
@@ -150,7 +153,7 @@ class CartController
             return new WP_Error('no_product_id', __('Product ID is required'), array('status' => 400));
         }
 
-        return $this->cartService->addToCartCustom($productId, $quantity, $customize);
+        return $this->cartService->addToCartCustom($productId, $quantity, $customize, $currency);
     }
 
     /**
@@ -178,7 +181,8 @@ class CartController
      */
     public function getCartItems(WP_REST_Request $request)
     {
-        return $this->cartService->getCartItems();
+        $currency = $request->get_param('currency') ?? "MYR";
+        return $this->cartService->getCartItems($currency);
     }
 
     /**
@@ -190,12 +194,12 @@ class CartController
     public function getCartItemByKey(WP_REST_Request $request)
     {
         $cartItemKey = $request->get_param('cart_item_key');
-
+        $currency = $request->get_param('currency') ?? "MYR";
         if (!$cartItemKey) {
             return new WP_Error('no_cart_item_key', __('Cart item key is required'), array('status' => 400));
         }
 
-        return $this->cartService->getCartItemByKey($cartItemKey);
+        return $this->cartService->getCartItemByKey($cartItemKey, $currency);
     }
 
     /**
