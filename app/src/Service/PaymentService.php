@@ -102,12 +102,10 @@ class PaymentService
      */
     public function exchangePrice($currency, $price)
     {
-        if (!array_key_exists($currency, $this->currency_return) && !isset($this->currency_return_reverse[$currency])) {
+        if (!array_key_exists($currency, $this->currency_return_reverse) && !isset($this->currency_return_reverse[$currency])) {
             return $price;
         }
         $ratio = get_field($this->currency_return_reverse[$currency], 'option');
-        error_log("ratio " . $ratio);
-        error_log("price " . $price);
         $after_exchange = $price * $ratio;
         return round($after_exchange, 2);
     }

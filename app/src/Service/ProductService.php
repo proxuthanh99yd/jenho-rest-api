@@ -461,7 +461,7 @@ class ProductService
      */
     public function exchangePrice($currency, $price)
     {
-        if (!array_key_exists($currency, $this->currency_return) && !isset($this->currency_return_reverse[$currency])) {
+        if (!array_key_exists($currency, $this->currency_return_reverse) && !isset($this->currency_return_reverse[$currency])) {
             return $price;
         }
         $ratio = get_field($this->currency_return_reverse[$currency], 'option');
