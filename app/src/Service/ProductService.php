@@ -233,12 +233,9 @@ class ProductService
             'id' => $product->get_id(),
             'name' => $product->get_name(),
             'slug' => $product->get_slug(),
-            'price' => $this->exchangePrice($currency, intval($this->getPrice($product->get_id()))),
+            'price' => intval($this->getPrice($product->get_id(), $currency)),
             'currency' => $currency,
-            'regular_price' => $this->exchangePrice(
-                $currency,
-                intval($this->getRegularPrice($product->get_id()))
-            ),
+            'regular_price' =>  intval($this->getRegularPrice($product->get_id(), $currency)),
             'descriptions' => get_field('product_details', $product->get_id()),
             'sku' => $product->get_sku(),
             'stock' => $product->get_stock_quantity(),
@@ -246,7 +243,7 @@ class ProductService
             'image' => wp_get_attachment_url($product->get_image_id()),
             'video' => $this->getVideo($product->get_id()),
             'categories' => wp_get_post_terms($product->get_id(), 'product_cat', array('fields' => 'names')),
-            'variations' => $this->getVariations($product),
+            'variations' => $this->getVariations($product, $currency),
             'customize_fee' => get_field('customize_size_fee', 'option')
         );
 
@@ -298,7 +295,7 @@ class ProductService
      * @param WC_Product $product The variable product object.
      * @return array An array of formatted product variations.
      */
-    private function getVariations($product)
+    private function getVariations($product, $currency)
     {
         // Check if the product is of type 'variable'
         if (!$product->is_type('variable')) return [];
@@ -308,7 +305,7 @@ class ProductService
         // Loop through each variation and format its data
         foreach ($variations as $variation) {
             // Add the formatted variation to the list
-            $formattedVariations[] = $this->formatVariation($variation);
+            $formattedVariations[] = $this->formatVariation($variation, $currency);
         }
 
         return $formattedVariations;
@@ -335,7 +332,7 @@ class ProductService
         return $formattedVariationImage;
     }
 
-    private function getPrice($product_id)
+    private function getPrice($product_id, $currency)
     {
         $product = wc_get_product($product_id);
         if ($product->is_type('variable')) {
@@ -344,7 +341,7 @@ class ProductService
             // Loop through each variation and format its data
             foreach ($variations as $variation) {
                 if ($variation['display_price']) {
-                    return $variation['display_price'];
+                    return $this->exchangePrice($currency, ($variation['display_price']));
                 }
                 // return $variation;
             }
@@ -352,7 +349,7 @@ class ProductService
         return $product->get_price();
     }
 
-    private function getRegularPrice($product_id)
+    private function getRegularPrice($product_id, $currency)
     {
         $product = wc_get_product($product_id);
         if ($product->is_type('variable')) {
@@ -360,7 +357,7 @@ class ProductService
             // Loop through each variation and format its data
             foreach ($variations as $variation) {
                 if ($variation['display_regular_price']) {
-                    return $variation['display_regular_price'];
+                    return $this->exchangePrice($currency, $variation['display_regular_price']);
                 }
                 // return $variation;
             }
@@ -412,8 +409,11 @@ class ProductService
         return [
             'id' => $variation['variation_id'],
             'name' => $variation['display_regular_price'],
-            'price' => $variation['display_price'],
-            'regular_price' => $variation['display_regular_price'],
+            'price' => $this->exchangePrice($currency, $variation['display_price']),
+            'regular_price' => $this->exchangePrice(
+                $currency,
+                $variation['display_regular_price']
+            ),
             'stock' => $variation['max_qty'],
             'in_stock' => $variation['is_in_stock'],
             'attributes' => array_values($attributes),
