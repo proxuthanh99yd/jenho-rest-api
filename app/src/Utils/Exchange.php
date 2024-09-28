@@ -21,7 +21,7 @@ class Exchange
     {
         // Sử dụng self:: thay cho $this
         if (!array_key_exists($currency, self::$currency_return_reverse)) {
-            return $price;
+            return round($price, 2);
         }
 
         // Lấy tỷ lệ trao đổi từ trường ACF tương ứng
@@ -29,7 +29,7 @@ class Exchange
 
         // Nếu tỷ lệ là null hoặc 0 (không hợp lệ), trả về giá ban đầu
         if (!$ratio || $ratio <= 0) {
-            return $price;
+            return round($price, 2);
         }
 
         // Tính giá sau khi đổi

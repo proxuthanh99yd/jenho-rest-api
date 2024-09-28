@@ -150,6 +150,8 @@ class OrderService
             $order->update_meta_data('date_of_birth', wc_clean($formattedDate));
             $order->calculate_totals();
 
+            $order->update_meta_data('order_currency', $currency);
+
             $order_total = $order->get_total(); // Lấy tổng giá trị đơn hàng
 
             $shipping_fee =  Shipping::fee($currency, $order_total);
@@ -341,6 +343,10 @@ class OrderService
             if (!empty($customize_fee)) {
                 $item->set_total($item->get_total() + $customize_fee);
             }
+            // Calculate discount
+            $line_total = $item->get_total();
+            $line_subtotal = $item->get_subtotal();
+            $item_discount = $line_subtotal - $line_total;
 
             $items[] = array(
                 'product' => $this->productService->getProduct($item->get_product_id(), $currency),
@@ -348,6 +354,7 @@ class OrderService
                 'quantity' => $item->get_quantity(),
                 'subtotal' => Exchange::price($currency, $item->get_subtotal()),
                 'total' => Exchange::price($currency, $item->get_total()),
+                'discount' => Exchange::price($currency, $item_discount), // Add item-level discount
                 'customize' => $this->get_custom_fields($item_id),
             );
         }
@@ -357,7 +364,6 @@ class OrderService
         foreach ($order->get_items('coupon') as $coupon_item_id => $coupon_item) {
             $coupon_code = $coupon_item->get_code(); // Lấy mã coupon
             $discount_amount = $coupon_item->get_discount(); // Lấy số tiền giảm giá của coupon
-
             $coupons[] = array(
                 'code' => $coupon_code,
                 'discount_amount' => Exchange::price($currency, $discount_amount),
