@@ -337,31 +337,22 @@ class OrderService
                 $item->set_total($item->get_total() + $customize_fee);
             }
 
-            // Tính toán tổng giảm giá từ mã giảm giá trên sản phẩm
-            $item_discount = 0;
-            if ($coupons = $order->get_used_coupons()) {
-                foreach ($coupons as $coupon_code) {
-                    $coupon = new WC_Coupon($coupon_code);
-                    $item_discount += $order->get_coupon_discount_amount($coupon_code, $item);
-                }
-            }
-
             $items[] = array(
                 'product' => $this->productService->getProduct($item->get_product_id(), $currency),
                 'variation' => $this->productService->getVariationById($item->get_product_id(), $item->get_variation_id(), $currency),
                 'quantity' => $item->get_quantity(),
                 'subtotal' => $this->productService->exchangePrice($currency, $item->get_subtotal()),
                 'total' => $this->productService->exchangePrice($currency, $item->get_total()),
-                'discount' => $this->productService->exchangePrice($currency, $item_discount), // Discount applied to this item
                 'customize' => $this->get_custom_fields($item_id),
             );
         }
 
-        // Get applied coupons
+        // Lấy mã giảm giá đã được áp dụng
         $coupons = [];
-        foreach ($order->get_used_coupons() as $coupon_code) {
-            $coupon = new WC_Coupon($coupon_code);
-            $discount_amount = $order->get_coupon_discount_amount($coupon_code);
+        foreach ($order->get_items('coupon') as $coupon_item_id => $coupon_item) {
+            $coupon_code = $coupon_item->get_code(); // Lấy mã coupon
+            $discount_amount = $coupon_item->get_discount(); // Lấy số tiền giảm giá của coupon
+
             $coupons[] = array(
                 'code' => $coupon_code,
                 'discount_amount' => $this->productService->exchangePrice($currency, $discount_amount),
@@ -427,14 +418,12 @@ class OrderService
             'subtotal' => $this->productService->exchangePrice($currency, $order->get_subtotal()),
             'shipping_total' => $shipping_total,
             'shipping_tax' => $shipping_tax,
-            'coupons' => $coupons,
+            'coupons' => $coupons, // Mã giảm giá đã áp dụng
             'date_created' => $order->get_date_created()->date('Y-m-d H:i:s'),
             'items' => $items,
             'order_info' => $order_info
         );
     }
-
-
 
     /**
      * Send a confirmation email after the order is created.
