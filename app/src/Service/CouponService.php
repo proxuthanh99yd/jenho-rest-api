@@ -2,12 +2,21 @@
 
 namespace Okhub\Service;
 
+use Okhub\Service\ProductService;
+use Okhub\Utils\Exchange;
 use WP_Error;
 use WC_Coupon;
 use WC_Order;
 
+
 class CouponService
 {
+    private $productService;
+    public function __construct(ProductService $productService)
+    {
+        $this->productService = $productService;
+    }
+
     /**
      * Check if a product has a coupon and calculate the discount price.
      *
@@ -54,9 +63,20 @@ class CouponService
             $discountedPrice = $originalPrice - $discount;
             $discount =
                 [
-                    'original_price' => $originalPrice,
-                    'discount' => $discount,
-                    'discounted_price' => $discountedPrice,
+                    'original_price' => Exchange::price(
+                        $currency,
+                        $originalPrice
+                    ),
+                    'discount' => Exchange::price(
+                        $currency,
+                        $discount
+                    ),
+                    'discounted_price' => Exchange::price(
+                        $currency,
+                        $discountedPrice
+                    ),
+                    'currency' => $currency,
+                    'coupon' => $couponCode
                 ];
             $response[] = array_merge($value, $discount);
         }
