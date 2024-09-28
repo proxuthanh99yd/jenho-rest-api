@@ -10,6 +10,7 @@ use Okhub\Service\CartService;
 use Okhub\Service\ProductService;
 use Okhub\Service\CouponService; // Include the CouponService
 use Okhub\Utils\Shipping;
+use Okhub\Utils\StockLocation;
 
 class OrderService
 {
@@ -314,10 +315,12 @@ class OrderService
         return $this->formatOrderData($order, $currency);
     }
 
+
     /**
-     * Formats the order data into a structured array.
+     * Format and return order data.
      *
-     * @param WC_Order $order The WooCommerce order object to format.
+     * @param WC_Order $order The order object to format.
+     * @param string $currency The currency to convert prices to.
      * @return array The formatted order data.
      */
     private function formatOrderData($order, $currency)
@@ -325,6 +328,10 @@ class OrderService
         // Format and return order data
         $items = [];
         foreach ($order->get_items() as $item_id => $item) {
+            if (!StockLocation::check($currency, $item->get_product_id())) {
+                continue;
+            }
+
             $customize_fee = wc_get_order_item_meta($item_id, '_custom_line_item_field_fee', true);
             error_log("customize_fee: " . $customize_fee);
             if (!empty($customize_fee)) {
