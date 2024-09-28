@@ -395,7 +395,9 @@ class OrderService
                 'transaction_id'           => $order->get_transaction_id(),
             ]
         ];
-
+        if (count($items) === 0) {
+            return [];
+        }
         return array(
             'id' => $order->get_id(), // Order ID
             'status' => $order->get_status(), // Order status
