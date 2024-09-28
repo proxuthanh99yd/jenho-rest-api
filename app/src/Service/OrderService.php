@@ -363,10 +363,17 @@ class OrderService
                 'discount_amount' => Exchange::price($currency, $discount_amount),
             );
         }
+        $fees = $order->get_items('fee'); // Lấy tất cả mục phí từ đơn hàng
+        $shipping_total = 0;
+        foreach ($fees as $fee) {
+            $fee_name = $fee->get_name();
+            if ($fee_name === 'Shipping Fee') {
+                $fee_total = $fee->get_total();
+                $shipping_total = Exchange::price($currency, $fee_total);
+            }
+        }
 
         // Get shipping details
-        $shipping_total = Exchange::price($currency, $order->get_shipping_total());
-        $shipping_tax = Exchange::price($currency, $order->get_shipping_tax());
 
         $order_info = [
             'customer_id' => $order->get_customer_id(),
@@ -422,7 +429,6 @@ class OrderService
             'total' => Exchange::price($currency, $order->get_total()),
             'subtotal' => Exchange::price($currency, $order->get_subtotal()),
             'shipping_total' => $shipping_total,
-            'shipping_tax' => $shipping_tax,
             'coupons' => $coupons, // Mã giảm giá đã áp dụng
             'date_created' => $order->get_date_created()->date('Y-m-d H:i:s'),
             'items' => $items,
