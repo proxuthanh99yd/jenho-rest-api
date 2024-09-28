@@ -325,7 +325,6 @@ class OrderService
      */
     private function formatOrderData($order, $currency)
     {
-        // Format and return order data
         $items = [];
         foreach ($order->get_items() as $item_id => $item) {
             if (!StockLocation::check($currency, $item->get_product_id())) {
@@ -333,87 +332,108 @@ class OrderService
             }
 
             $customize_fee = wc_get_order_item_meta($item_id, '_custom_line_item_field_fee', true);
-            error_log("customize_fee: " . $customize_fee);
             if (!empty($customize_fee)) {
                 $item->set_total($item->get_total() + $customize_fee);
-                // $item->set_subtotal($item->get_subtotal() + $customize_fee);
+            }
+
+            // Tính toán tổng giảm giá từ mã giảm giá trên sản phẩm
+            $item_discount = 0;
+            if ($coupons = $order->get_used_coupons()) {
+                foreach ($coupons as $coupon_code) {
+                    $coupon = new WC_Coupon($coupon_code);
+                    $item_discount += $order->get_coupon_discount_amount($coupon_code, $item);
+                }
             }
 
             $items[] = array(
-                'product' => $this->productService->getProduct($item->get_product_id(), $currency), // Product ID
-                'variation' => $this->productService->getVariationById($item->get_product_id(), $item->get_variation_id(), $currency), // Variation ID if applicable
-                'quantity' =>  $item->get_quantity(), // Quantity ordered
-                'subtotal' => $this->productService->exchangePrice($currency, $item->get_subtotal()), // Item subtotal
-                'total' => $this->productService->exchangePrice(
-                    $currency,
-                    $item->get_total()
-                ), // Item total
-                'customize' => $this->get_custom_fields($item_id), // Customizations
+                'product' => $this->productService->getProduct($item->get_product_id(), $currency),
+                'variation' => $this->productService->getVariationById($item->get_product_id(), $item->get_variation_id(), $currency),
+                'quantity' => $item->get_quantity(),
+                'subtotal' => $this->productService->exchangePrice($currency, $item->get_subtotal()),
+                'total' => $this->productService->exchangePrice($currency, $item->get_total()),
+                'discount' => $this->productService->exchangePrice($currency, $item_discount), // Discount applied to this item
+                'customize' => $this->get_custom_fields($item_id),
             );
         }
 
+        // Get applied coupons
+        $coupons = [];
+        foreach ($order->get_used_coupons() as $coupon_code) {
+            $coupon = new WC_Coupon($coupon_code);
+            $discount_amount = $order->get_coupon_discount_amount($coupon_code);
+            $coupons[] = array(
+                'code' => $coupon_code,
+                'discount_amount' => $this->productService->exchangePrice($currency, $discount_amount),
+            );
+        }
+
+        // Get shipping details
+        $shipping_total = $this->productService->exchangePrice($currency, $order->get_shipping_total());
+        $shipping_tax = $this->productService->exchangePrice($currency, $order->get_shipping_tax());
+
         $order_info = [
-            'customer_id'                  => $order->get_customer_id(),
-            'user_id'                      => $order->get_user_id(),
-            'user'                         => $order->get_user(),
-            'customer_ip_address'          => $order->get_customer_ip_address(),
-            'customer_user_agent'          => $order->get_customer_user_agent(),
-            'created_via'                  => $order->get_created_via(),
-            'customer_note'                => $order->get_customer_note(),
+            'customer_id' => $order->get_customer_id(),
+            'user_id' => $order->get_user_id(),
+            'user' => $order->get_user(),
+            'customer_ip_address' => $order->get_customer_ip_address(),
+            'customer_user_agent' => $order->get_customer_user_agent(),
+            'created_via' => $order->get_created_via(),
+            'customer_note' => $order->get_customer_note(),
             'billing' => [
-                'first_name'               => $order->get_billing_first_name(),
-                'last_name'                => $order->get_billing_last_name(),
-                'company'                  => $order->get_billing_company(),
-                'address_1'                => $order->get_billing_address_1(),
-                'address_2'                => $order->get_billing_address_2(),
-                'city'                     => $order->get_billing_city(),
-                'state'                    => $order->get_billing_state(),
-                'postcode'                 => $order->get_billing_postcode(),
-                'country'                  => $order->get_billing_country(),
-                'email'                    => $order->get_billing_email(),
-                'phone'                    => $order->get_billing_phone(),
-                'formatted_full_name'      => $order->get_formatted_billing_full_name(),
-                'formatted_address'        => $order->get_formatted_billing_address(),
+                'first_name' => $order->get_billing_first_name(),
+                'last_name' => $order->get_billing_last_name(),
+                'company' => $order->get_billing_company(),
+                'address_1' => $order->get_billing_address_1(),
+                'address_2' => $order->get_billing_address_2(),
+                'city' => $order->get_billing_city(),
+                'state' => $order->get_billing_state(),
+                'postcode' => $order->get_billing_postcode(),
+                'country' => $order->get_billing_country(),
+                'email' => $order->get_billing_email(),
+                'phone' => $order->get_billing_phone(),
+                'formatted_full_name' => $order->get_formatted_billing_full_name(),
+                'formatted_address' => $order->get_formatted_billing_address(),
             ],
             'shipping' => [
-                'first_name'               => $order->get_shipping_first_name(),
-                'last_name'                => $order->get_shipping_last_name(),
-                'company'                  => $order->get_shipping_company(),
-                'address_1'                => $order->get_shipping_address_1(),
-                'address_2'                => $order->get_shipping_address_2(),
-                'city'                     => $order->get_shipping_city(),
-                'state'                    => $order->get_shipping_state(),
-                'postcode'                 => $order->get_shipping_postcode(),
-                'country'                  => $order->get_shipping_country(),
-                'address_map_url'          => $order->get_shipping_address_map_url(),
-                'formatted_full_name'      => $order->get_formatted_shipping_full_name(),
-                'formatted_address'        => $order->get_formatted_shipping_address(),
+                'first_name' => $order->get_shipping_first_name(),
+                'last_name' => $order->get_shipping_last_name(),
+                'company' => $order->get_shipping_company(),
+                'address_1' => $order->get_shipping_address_1(),
+                'address_2' => $order->get_shipping_address_2(),
+                'city' => $order->get_shipping_city(),
+                'state' => $order->get_shipping_state(),
+                'postcode' => $order->get_shipping_postcode(),
+                'country' => $order->get_shipping_country(),
+                'address_map_url' => $order->get_shipping_address_map_url(),
+                'formatted_full_name' => $order->get_formatted_shipping_full_name(),
+                'formatted_address' => $order->get_formatted_shipping_address(),
             ],
             'payment' => [
-                'method'                   => $order->get_payment_method(),
-                'method_title'             => $order->get_payment_method_title(),
-                'transaction_id'           => $order->get_transaction_id(),
+                'method' => $order->get_payment_method(),
+                'method_title' => $order->get_payment_method_title(),
+                'transaction_id' => $order->get_transaction_id(),
             ]
         ];
+
         if (count($items) === 0) {
             return [];
         }
+
         return array(
-            'id' => $order->get_id(), // Order ID
-            'status' => $order->get_status(), // Order status
-            'total' => $this->productService->exchangePrice(
-                $currency,
-                $order->get_total()
-            ), // Order total amount
-            'subtotal' => $this->productService->exchangePrice(
-                $currency,
-                $order->get_subtotal()
-            ), // Order subtotal
-            'date_created' => $order->get_date_created()->date('Y-m-d H:i:s'), // Order creation date
-            'items' => $items, // Iterate over each item in the order
+            'id' => $order->get_id(),
+            'status' => $order->get_status(),
+            'total' => $this->productService->exchangePrice($currency, $order->get_total()),
+            'subtotal' => $this->productService->exchangePrice($currency, $order->get_subtotal()),
+            'shipping_total' => $shipping_total,
+            'shipping_tax' => $shipping_tax,
+            'coupons' => $coupons,
+            'date_created' => $order->get_date_created()->date('Y-m-d H:i:s'),
+            'items' => $items,
             'order_info' => $order_info
         );
     }
+
+
 
     /**
      * Send a confirmation email after the order is created.
@@ -456,12 +476,17 @@ class OrderService
         $custom_fields = [
             'height',
             'weight',
-            'midsection',
-            'burst',
+            'shoulder_to_shoulder',
+            'bust',
+            'under_bust',
+            'shoulder_to_hand',
+            'to_fit',
             'waist',
             'hip',
-            'to_fit',
-            'color'
+            'shoulder_to_waist',
+            'shoulder_to_toe',
+            'color',
+            'fee',
         ];
         $data = [];
         foreach ($custom_fields as $field) {

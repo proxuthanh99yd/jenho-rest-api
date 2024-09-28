@@ -54,7 +54,7 @@ class CouponController
         $couponCode = $request->get_param('coupon_code');
         $currency = $request->get_param('currency') ?? "MYR";
 
-        $result = $this->couponService->applyCouponToProduct($items, $couponCode, $currency);
+        $result = $this->couponService->applyCouponToProducts($items, $couponCode, $currency);
 
         if (is_wp_error($result)) {
             return $result;
