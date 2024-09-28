@@ -13,7 +13,7 @@ add_action('woocommerce_init', function () {
     $cartService = new \Okhub\Service\CartService($productService);
     $cartController = new \Okhub\Controller\CartController($cartService, $authService);
 
-    $couponService = new \Okhub\Service\CouponService($productService);
+    $couponService = new \Okhub\Service\CouponService();
     $couponController = new \Okhub\Controller\CouponController($couponService, $authService);
 
     $orderService = new \Okhub\Service\OrderService($cartService, $couponService, $productService);

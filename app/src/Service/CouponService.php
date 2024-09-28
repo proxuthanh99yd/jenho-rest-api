@@ -2,7 +2,6 @@
 
 namespace Okhub\Service;
 
-use Okhub\Service\ProductService;
 use Okhub\Utils\Exchange;
 use WP_Error;
 use WC_Coupon;
@@ -11,12 +10,6 @@ use WC_Order;
 
 class CouponService
 {
-    private $productService;
-    public function __construct(ProductService $productService)
-    {
-        $this->productService = $productService;
-    }
-
     /**
      * Check if a product has a coupon and calculate the discount price.
      *
