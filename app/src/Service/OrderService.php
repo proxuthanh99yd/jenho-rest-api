@@ -154,7 +154,7 @@ class OrderService
 
             $order_total = $order->get_total(); // Lấy tổng giá trị đơn hàng
 
-            $shipping_fee =  Shipping::fee($currency, $order_total);
+            $shipping_fee =  Shipping::fee($currency, Exchange::price($currency, $order_total));
             if ($shipping_fee != 0) {
                 $shipping_fee_exchange = Exchange::price_reverse(
                     $currency,
