@@ -6,6 +6,7 @@ use WP_Error;
 use WC_Order;
 use WC_Product;
 use WC_Order_Item_Fee;
+use WC_Coupon;
 use Okhub\Service\CartService;
 use Okhub\Service\ProductService;
 use Okhub\Service\CouponService; // Include the CouponService
