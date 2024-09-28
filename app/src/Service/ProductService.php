@@ -42,8 +42,8 @@ class ProductService
             'posts_per_page' => isset($args['limit']) ? intval($args['limit']) : 10, // Number of products per page
             'paged' => isset($args['page']) ? intval($args['page']) : 1, // Current page number
             'tax_query' => array(), // Taxonomy query array
-            'orderby' => 'meta_value_num', // Order by a meta value (numeric)
-            'order' => 'ASC', // Order direction (ascending)
+            'orderby'        => 'modified', // Order by the date the product was last modified
+            'order'          => 'DESC', // Order direction (newest first)
         );
 
         if (isset($args['s'])) {
