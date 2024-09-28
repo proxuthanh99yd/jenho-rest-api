@@ -2,6 +2,7 @@
 
 namespace Okhub\Service;
 
+use Okhub\Utils\StockLocation;
 use ArrayAccess;
 use WC_Product;
 use WP_Error;
@@ -176,14 +177,21 @@ class ProductService
      * Retrieves a single product by its ID.
      *
      * @param int $productId The ID of the product to retrieve.
+     * @param string $currency The currency to check stock location.
      * @return array|WP_Error Returns formatted product data or an error if not found.
      */
     public function getProduct($productId, $currency)
     {
         $product = wc_get_product($productId);
+
         if (!$product) {
-            return false;
+            return new WP_Error('product_not_found', __('Product not found'), array('status' => 404));
         }
+
+        if (!StockLocation::check($currency, $product->get_id())) {
+            return new WP_Error('product_not_available', __('Product not available in the specified currency location'), array('status' => 404));
+        }
+
         return $this->formatSingleProduct($product, $currency);
     }
 
@@ -191,32 +199,44 @@ class ProductService
      * Retrieves a single product by its slug or SKU.
      *
      * @param string $slug The slug or SKU of the product.
+     * @param string $currency The currency to check stock location.
      * @return array|WP_Error Returns formatted product data or an error if not found.
      */
     public function getProductBySlug($slug, $currency)
     {
-        // Fetch product ID by SKU first
+        // Try fetching product by SKU first
         $product_id = wc_get_product_id_by_sku($slug);
+
         if (!$product_id) {
-            // If not found by SKU, try fetching by slug
+            // If SKU not found, try fetching by slug
             $product = get_page_by_path($slug, OBJECT, 'product');
+
             if ($product) {
                 $product_id = $product->ID;
             }
         }
 
+        // If product not found by either SKU or slug
         if (!$product_id) {
             return new WP_Error('product_not_found', __('Product not found'), array('status' => 404));
         }
 
+        // Check if product is available in the specified currency location
+        if (!StockLocation::check($currency, $product_id)) {
+            return new WP_Error('product_not_available', __('Product not available in the specified currency location'), array('status' => 404));
+        }
+
+        // Load the WooCommerce product object
         $product = wc_get_product($product_id);
 
+        // If the product does not exist or is not valid
         if (!$product) {
             return new WP_Error('product_not_found', __('Product not found'), array('status' => 404));
         }
 
         return $this->formatSingleProduct($product, $currency);
     }
+
 
     /**
      * Formats a single product object into a detailed array.
