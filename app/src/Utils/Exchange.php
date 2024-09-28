@@ -36,4 +36,23 @@ class Exchange
         $after_exchange = $price * $ratio;
         return round($after_exchange, 2);
     }
+    public static function price_reverse($currency, $price)
+    {
+        // Sử dụng self:: thay cho $this
+        if (!array_key_exists($currency, self::$currency_return_reverse)) {
+            return $price;
+        }
+
+        // Lấy tỷ lệ trao đổi từ trường ACF tương ứng
+        $ratio = get_field(self::$currency_return_reverse[$currency], 'option');
+
+        // Nếu tỷ lệ là null hoặc 0 (không hợp lệ), trả về giá ban đầu
+        if (!$ratio || $ratio <= 0) {
+            return $price;
+        }
+
+        // Tính giá sau khi đổi
+        $after_exchange = $price / $ratio;
+        return round($after_exchange, 2);
+    }
 }

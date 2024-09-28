@@ -12,6 +12,7 @@ use Okhub\Service\ProductService;
 use Okhub\Service\CouponService; // Include the CouponService
 use Okhub\Utils\Shipping;
 use Okhub\Utils\StockLocation;
+use Okhub\Utils\Exchange;
 
 class OrderService
 {
@@ -151,12 +152,16 @@ class OrderService
 
             $order_total = $order->get_total(); // Lấy tổng giá trị đơn hàng
 
-            $shipping_fee = Shipping::fee($currency, $order_total);
+            $shipping_fee =  Shipping::fee($currency, $order_total);
             if ($shipping_fee != 0) {
+                $shipping_fee_exchange = Exchange::price_reverse(
+                    $currency,
+                    $shipping_fee
+                );
                 $fee = new \WC_Order_Item_Fee();
                 $fee->set_name('Shipping Fee');
-                $fee->set_amount($shipping_fee);
-                $fee->set_total($shipping_fee);
+                $fee->set_amount($shipping_fee_exchange);
+                $fee->set_total($shipping_fee_exchange);
                 $order->add_item($fee);
                 $order->calculate_totals(); // Cập nhật lại tổng đơn hàng sau khi thêm phí}
             }
@@ -341,8 +346,8 @@ class OrderService
                 'product' => $this->productService->getProduct($item->get_product_id(), $currency),
                 'variation' => $this->productService->getVariationById($item->get_product_id(), $item->get_variation_id(), $currency),
                 'quantity' => $item->get_quantity(),
-                'subtotal' => $this->productService->exchangePrice($currency, $item->get_subtotal()),
-                'total' => $this->productService->exchangePrice($currency, $item->get_total()),
+                'subtotal' => Exchange::price($currency, $item->get_subtotal()),
+                'total' => Exchange::price($currency, $item->get_total()),
                 'customize' => $this->get_custom_fields($item_id),
             );
         }
@@ -355,13 +360,13 @@ class OrderService
 
             $coupons[] = array(
                 'code' => $coupon_code,
-                'discount_amount' => $this->productService->exchangePrice($currency, $discount_amount),
+                'discount_amount' => Exchange::price($currency, $discount_amount),
             );
         }
 
         // Get shipping details
-        $shipping_total = $this->productService->exchangePrice($currency, $order->get_shipping_total());
-        $shipping_tax = $this->productService->exchangePrice($currency, $order->get_shipping_tax());
+        $shipping_total = Exchange::price($currency, $order->get_shipping_total());
+        $shipping_tax = Exchange::price($currency, $order->get_shipping_tax());
 
         $order_info = [
             'customer_id' => $order->get_customer_id(),
@@ -414,8 +419,8 @@ class OrderService
         return array(
             'id' => $order->get_id(),
             'status' => $order->get_status(),
-            'total' => $this->productService->exchangePrice($currency, $order->get_total()),
-            'subtotal' => $this->productService->exchangePrice($currency, $order->get_subtotal()),
+            'total' => Exchange::price($currency, $order->get_total()),
+            'subtotal' => Exchange::price($currency, $order->get_subtotal()),
             'shipping_total' => $shipping_total,
             'shipping_tax' => $shipping_tax,
             'coupons' => $coupons, // Mã giảm giá đã áp dụng

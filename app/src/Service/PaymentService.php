@@ -2,6 +2,7 @@
 
 namespace Okhub\Service;
 
+use Okhub\Utils\Exchange;
 use WP_REST_Request;
 use WP_Error;
 
@@ -48,7 +49,7 @@ class PaymentService
                 'OrderNumber' => $orderId,
                 'PaymentDesc' => "JENHO Payment for #" . $orderId,
                 'MerchantReturnURL' => $this->merchantReturnUrl,
-                'Amount' => $this->formatAmount($this->exchangePrice($this->currencyCode, $order->get_total())),
+                'Amount' => $this->formatAmount(Exchange::price($this->currencyCode, $order->get_total())),
                 'CurrencyCode' => $this->currencyCode,
                 'CustName' => $data['billing']['first_name'] . " " . $data['billing']['last_name'],
                 'CustEmail' => $data['billing']['email'],
@@ -59,7 +60,7 @@ class PaymentService
                     $this->serviceId,
                     $paymentID,
                     $this->merchantReturnUrl,
-                    $this->exchangePrice(
+                    Exchange::price(
                         $this->currencyCode,
                         $order->get_total()
                     ),

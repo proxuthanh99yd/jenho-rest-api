@@ -246,6 +246,11 @@ class ProductService
      */
     private function formatSingleProduct(WC_Product $product, $currency)
     {
+        $attachment_ids = $product->get_gallery_attachment_ids();
+        $gallery_images = [];
+        foreach ($attachment_ids as $key => $attachment_id) {
+            $gallery_images[] = wp_get_attachment_url($attachment_id);
+        }
         $response = array(
             'id' => $product->get_id(),
             'name' => $product->get_name(),
@@ -258,6 +263,7 @@ class ProductService
             'stock' => $product->get_stock_quantity(),
             'stock_status' => $product->get_stock_status(),
             'image' => wp_get_attachment_url($product->get_image_id()),
+            'gallery_images' => $gallery_images,
             'video' => $this->getVideo($product->get_id()),
             'categories' => wp_get_post_terms($product->get_id(), 'product_cat', array('fields' => 'names')),
             'variations' => $this->getVariations($product, $currency),

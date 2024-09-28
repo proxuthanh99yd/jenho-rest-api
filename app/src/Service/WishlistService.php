@@ -112,7 +112,6 @@ class WishlistService
         return $wishlist['ID']; // Trả về ID của wishlist mới tạo
     }
 
-
     private function get_items_by_wishlist($wishlist_id)
     {
         return WishlistItem::get_items_by_wishlist($wishlist_id);
