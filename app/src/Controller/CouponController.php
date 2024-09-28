@@ -4,6 +4,8 @@ namespace Okhub\Controller;
 
 use Okhub\Service\CouponService;
 use Okhub\Service\AuthService;
+use Okhub\Validator\ValidatorCouponController;
+use Okhub\Utils\Validator;
 use WP_REST_Request;
 use WP_Error;
 
@@ -25,7 +27,18 @@ class CouponController
         register_rest_route('api/v1', 'coupons/apply', array(
             'methods' => 'POST',
             'callback' => array($this, 'applyCoupon'),
-            'permission_callback' => '__return_true'
+            'permission_callback' => '__return_true',
+            'args' => [
+                'items' => [
+                    'validate_callback' => [ValidatorCouponController::class, 'validateCouponProductItems']
+                ],
+                'coupon_code' => [
+                    'validate_callback' => [ValidatorCouponController::class, 'validateCouponCode']
+                ],
+                'currency' => [
+                    'validate_callback' => [Validator::class, 'validate_currency']
+                ],
+            ]
         ));
     }
 
@@ -37,16 +50,11 @@ class CouponController
      */
     public function applyCoupon(WP_REST_Request $request)
     {
-        $productId = $request->get_param('product_id');
-        $variationId = $request->get_param('variation_id');
-        $quantity = $request->get_param('quantity') ?: 1;
+        $items = $request->get_param('items');
         $couponCode = $request->get_param('coupon_code');
+        $currency = $request->get_param('currency') ?? "MYR";
 
-        if (!$productId || !$variationId || !$couponCode) {
-            return new WP_Error('missing_params', __('Product ID, Variation ID, and Coupon Code are required'), array('status' => 400));
-        }
-
-        $result = $this->couponService->applyCouponToProduct($productId, $variationId, $quantity, $couponCode);
+        $result = $this->couponService->applyCouponToProduct($items, $couponCode, $currency);
 
         if (is_wp_error($result)) {
             return $result;

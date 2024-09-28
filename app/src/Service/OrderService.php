@@ -328,10 +328,12 @@ class OrderService
         $items = [];
         foreach ($order->get_items() as $item_id => $item) {
             $customize_fee = wc_get_order_item_meta($item_id, '_custom_line_item_field_fee', true);
+            error_log("customize_fee: " . $customize_fee);
             if (!empty($customize_fee)) {
                 $item->set_total($item->get_total() + $customize_fee);
-                $item->set_subtotal($item->get_subtotal() + $customize_fee);
+                // $item->set_subtotal($item->get_subtotal() + $customize_fee);
             }
+
             $items[] = array(
                 'product' => $this->productService->getProduct($item->get_product_id(), $currency), // Product ID
                 'variation' => $this->productService->getVariationById($item->get_product_id(), $item->get_variation_id(), $currency), // Variation ID if applicable

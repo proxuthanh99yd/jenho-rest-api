@@ -46,11 +46,11 @@ class Validator
     // Validates currency (MYR, VND, USD)
     public static function validate_currency($value, $request, $param)
     {
-        $valid_currencies = ['MYR', 'VND', 'USD'];
+        $valid_currencies = ['MYR', 'VND', 'USD', 'SGD'];
         if (is_string($value) && in_array(strtoupper($value), $valid_currencies, true)) {
             return true;
         }
-        return new \WP_Error('rest_invalid_param', sprintf('The %s field must be a valid currency (MYR, VND, USD).', $param), ['status' => 400]);
+        return new \WP_Error('rest_invalid_param', sprintf('The %s field must be a valid currency (MYR, VND, USD, SGD).', $param), ['status' => 400]);
     }
 
     public static function validate_number($value, $request, $param)
