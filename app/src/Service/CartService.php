@@ -3,6 +3,7 @@
 namespace Okhub\Service;
 
 use Okhub\Service\ProductService;
+use Okhub\Utils\StockLocation;
 use WP_Error;
 use WP_REST_Response;
 use WC;
@@ -310,6 +311,9 @@ class CartService
         $cart_items = array_filter(array_map(function ($cart_item) use ($session_data, $currency) {
             $product = wc_get_product($cart_item['product_id']);
             if (!$product) {
+                return null;
+            }
+            if (!StockLocation::check($currency, $product->get_id())) {
                 return null;
             }
 

@@ -9,6 +9,7 @@ use WC_Order_Item_Fee;
 use Okhub\Service\CartService;
 use Okhub\Service\ProductService;
 use Okhub\Service\CouponService; // Include the CouponService
+use Okhub\Utils\Shipping;
 
 class OrderService
 {
@@ -147,18 +148,15 @@ class OrderService
             $order->calculate_totals();
 
             $order_total = $order->get_total(); // Lấy tổng giá trị đơn hàng
-            if ($currency === "VND") {
-                $shipping_fee_data = get_field("viet_nam_shipping_fee", "option");
-                $threshold = $shipping_fee_data['under']; // Giá trị ngưỡng để miễn phí vận chuyển
-                if ($order_total < $threshold) {
-                    $shipping_fee = $shipping_fee_data['fee']; // Số tiền phí vận chuyển
-                    $fee = new \WC_Order_Item_Fee();
-                    $fee->set_name('Shipping Fee');
-                    $fee->set_amount($shipping_fee);
-                    $fee->set_total($shipping_fee);
-                    $order->add_item($fee);
-                    $order->calculate_totals(); // Cập nhật lại tổng đơn hàng sau khi thêm phí
-                }
+
+            $shipping_fee = Shipping::fee($currency, $order_total);
+            if ($shipping_fee != 0) {
+                $fee = new \WC_Order_Item_Fee();
+                $fee->set_name('Shipping Fee');
+                $fee->set_amount($shipping_fee);
+                $fee->set_total($shipping_fee);
+                $order->add_item($fee);
+                $order->calculate_totals(); // Cập nhật lại tổng đơn hàng sau khi thêm phí}
             }
 
             $order_id = $order->save(); // Save order and get order ID
