@@ -88,7 +88,7 @@ class ProductService
             // Add category filter if specified
             if (!empty($args['category_name'])) {
                 $taxQuery[] = [
-                    'taxonomy' => 'product_cat',
+                    'taxonomy' => 'product_type_custom',
                     'field' => 'slug',
                     'terms' => explode(',', $args['category_name']),
                 ];
@@ -115,7 +115,7 @@ class ProductService
             while ($query->have_posts()) {
                 $query->the_post();
                 $product = wc_get_product(get_the_ID());
-
+                $the_terms = get_the_terms($product->get_id(), 'product_type_custom');
                 if ($slug) {
                     $products['data'][] = $product->get_slug();
                     continue;
@@ -128,6 +128,7 @@ class ProductService
                     'price' => $this->getPrice($product->get_id(), $args['currency']),
                     'currency' => $args['currency'],
                     'regular_price' => $this->getRegularPrice($product->get_id(), $args['currency']),
+                    'categories' => $the_terms,
                     'image' => wp_get_attachment_url($product->get_image_id()),
                     'video' => $this->getVideo($product->get_id()),
                     'variations' => $this->getVariations($product, $args['currency']),
@@ -265,7 +266,7 @@ class ProductService
             'image' => wp_get_attachment_url($product->get_image_id()),
             'gallery_images' => $gallery_images,
             'video' => $this->getVideo($product->get_id()),
-            'categories' => wp_get_post_terms($product->get_id(), 'product_cat', array('fields' => 'names')),
+            'categories' => wp_get_post_terms($product->get_id(), 'product_type_custom', array('fields' => 'names')),
             'variations' => $this->getVariations($product, $currency),
             'customize_fee' => get_field('customize_size_fee', 'option')
         );
