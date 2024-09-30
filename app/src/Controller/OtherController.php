@@ -40,6 +40,13 @@ class OtherController
                 )
             ),
         ));
+
+        // Endpoint to get states based on country code
+        register_rest_route('api/v1', 'shipping/price', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'getShippingPrice'),
+            'permission_callback' => '__return_true',
+        ));
     }
 
     /**
@@ -72,5 +79,32 @@ class OtherController
         }
 
         return rest_ensure_response($states);
+    }
+
+    public function getShippingPrice(WP_REST_Request $request)
+    {
+        $viet_nam_shipping_fee = get_field('viet_nam_shipping_fee', 'option');
+        $singapore_shipping_fee = get_field('singapore_shipping_fee', 'option');
+        $malaysia_shipping_fee = get_field('malaysia_shipping_fee', 'option');
+        $other_country_shipping_fee = get_field('other_country_shipping_fee', 'option');
+
+        return [
+            "VND" => [
+                "under" => $viet_nam_shipping_fee["under"],
+                "fee" => $viet_nam_shipping_fee["fee"],
+            ],
+            "SGD" => [
+                "under" => $singapore_shipping_fee["under"],
+                "fee" => $singapore_shipping_fee["fee"],
+            ],
+            "MYR" => [
+                "under" => $malaysia_shipping_fee["under"],
+                "fee" => $malaysia_shipping_fee["fee"],
+            ],
+            "other_country" => [
+                "under" => $other_country_shipping_fee["under"],
+                "fee" => $other_country_shipping_fee["fee"],
+            ],
+        ];
     }
 }

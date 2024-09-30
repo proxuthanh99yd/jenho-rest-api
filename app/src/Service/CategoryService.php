@@ -15,12 +15,16 @@ class CategoryService
 
         $termFields =  get_field($this->fieldname, $this->page);
         $response = [];
+        if (!$termFields) return $response;
+
         foreach ($termFields as $term_id) {
-            $cat_thumb_id = get_field('product_type_thumbnail', $this->tax . '_' . $term_id);
-            $cat_thumb_url = wp_get_attachment_image_url($cat_thumb_id);
-            $theTerm =  get_term_by('term_id', $term_id, $this->tax, ARRAY_A);
-            $theTerm['thumbnail'] = $cat_thumb_url;
-            $response[] = $theTerm;
+            if ($term_id) {
+                $cat_thumb_id = get_field('product_type_thumbnail', $this->tax . '_' . $term_id);
+                $cat_thumb_url = wp_get_attachment_image_url($cat_thumb_id);
+                $theTerm =  get_term_by('term_id', $term_id, $this->tax, ARRAY_A);
+                $theTerm['thumbnail'] = $cat_thumb_url;
+                $response[] = $theTerm;
+            }
         }
         return $response;
     }

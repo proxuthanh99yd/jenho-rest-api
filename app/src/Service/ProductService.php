@@ -266,7 +266,7 @@ class ProductService
             'image' => wp_get_attachment_url($product->get_image_id()),
             'gallery_images' => $gallery_images,
             'video' => $this->getVideo($product->get_id()),
-            'categories' => wp_get_post_terms($product->get_id(), 'product_type_custom', array('fields' => 'names')),
+            'categories' => get_the_terms($product->get_id(), 'product_type_custom'),
             'variations' => $this->getVariations($product, $currency),
             'customize_fee' => get_field('customize_size_fee', 'option')
         );
