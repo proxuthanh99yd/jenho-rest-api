@@ -247,7 +247,7 @@ class ProductService
      */
     private function formatSingleProduct(WC_Product $product, $currency)
     {
-        $attachment_ids = $product->get_gallery_attachment_ids();
+        $attachment_ids = $product->get_gallery_image_ids();
         $gallery_images = [];
         foreach ($attachment_ids as $key => $attachment_id) {
             $gallery_images[] = wp_get_attachment_url($attachment_id);
