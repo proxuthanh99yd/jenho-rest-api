@@ -33,28 +33,33 @@ class AuthController
             'callback' => array($this, 'login'),
             'permission_callback' => '__return_true'
         ));
+
         register_rest_route('api/v1', 'register', array(
-            'methods' => 'POST',
+            'methods'  => 'POST',
             'callback' => array($this, 'registerUser'),
             'permission_callback' => '__return_true',
-            'args' => [
-                'emailOrUsername' => [
+            'args'     => array(
+                'emailOrUsername' => array(
+                    'required' => true,
                     'validate_callback' => function ($param, $request, $key) {
-                        return is_email($param) || is_string($param);
-                    }
-                ],
-                'password' => [
+                        return is_string($param) && !empty($param);
+                    },
+                ),
+                'fullName' => array(
+                    'required' => true,
                     'validate_callback' => function ($param, $request, $key) {
-                        return is_string($param);
-                    }
-                ],
-                'fullName' => [
+                        return is_string($param) && !empty($param);
+                    },
+                ),
+                'password' => array(
+                    'required' => true,
                     'validate_callback' => function ($param, $request, $key) {
-                        return is_string($param);
-                    }
-                ]
-            ]
+                        return is_string($param) && !empty($param);
+                    },
+                ),
+            ),
         ));
+
         register_rest_route('api/v1', 'refresh-token', array(
             'methods' => 'POST',
             'callback' => array($this, 'refreshToken'),
