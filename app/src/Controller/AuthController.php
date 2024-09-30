@@ -98,7 +98,7 @@ class AuthController
         $email = $request->get_param('email');
         $password = $request->get_param('password');
 
-        return $this->authService->login($email, $fullName, $password);
+        return $this->authService->login($email, $password);
     }
 
     /**
