@@ -23,13 +23,14 @@ class AuthService
     }
 
     /**
-     * Registers a new user with either an email or username.
+     * Registers a new user.
      *
-     * @param string $emailOrUsername Email address or username
-     * @param string $password User's password
-     * @return array|WP_Error
+     * @param string $emailOrUsername Email address or username for the new user
+     * @param string $password Password for the new user
+     * @param string $fullName Full name of the new user
+     * @return array|WP_Error Array containing user ID, user meta, and JWT tokens; or a WP_Error object upon failure
      */
-    public function registerUser($emailOrUsername, $password)
+    public function registerUser($emailOrUsername, $password, $fullName)
     {
         // Check if the email or username is already registered
         if (username_exists($emailOrUsername) || email_exists($emailOrUsername)) {
@@ -48,6 +49,9 @@ class AuthService
             return $user_id;
         }
 
+        // Add user meta
+        update_user_meta($user_id, 'first_name', $fullName);
+
         // Fetch user meta and generate JWT tokens
         $usermeta = get_user_meta($user_id);
         $token = $this->tokenHandler->generateTokens($user_id);
@@ -59,17 +63,18 @@ class AuthService
         );
     }
 
+
     /**
-     * Authenticates a user with a username and password.
+     * Authenticates a user with the given email, full name, and password.
      *
-     * @param string $username Username
-     * @param string $password Password
-     * @return array|WP_Error
+     * @param string $email User's email address
+     * @param string $password User's password
+     * @return array|WP_Error Returns JWT tokens or a WP_Error on authentication failure
      */
-    public function login($username, $password)
+    public function login($email, $password)
     {
         // Attempt to authenticate the user
-        $user = wp_authenticate($username, $password);
+        $user = wp_authenticate($email, $password);
 
         // Check if authentication failed
         if (is_wp_error($user)) {

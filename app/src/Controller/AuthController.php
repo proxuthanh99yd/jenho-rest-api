@@ -73,10 +73,10 @@ class AuthController
      */
     public function login(WP_REST_Request $request)
     {
-        $username = $request->get_param('username');
+        $email = $request->get_param('email');
         $password = $request->get_param('password');
 
-        return $this->authService->login($username, $password);
+        return $this->authService->login($email, $fullName, $password);
     }
 
     /**
@@ -88,9 +88,10 @@ class AuthController
     public function registerUser(WP_REST_Request $request)
     {
         $emailOrUsername = $request->get_param('emailOrUsername');
+        $fullName = $request->get_param('fullName');
         $password = $request->get_param('password');
 
-        $result = $this->authService->registerUser($emailOrUsername, $password);
+        $result = $this->authService->registerUser($emailOrUsername, $password, $fullName);
 
         if (is_wp_error($result)) {
             return new WP_REST_Response($result, 400);
