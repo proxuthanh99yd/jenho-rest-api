@@ -8,13 +8,14 @@ use WP_Error;
 
 class PaymentService
 {
-    private $password = PMT_PASSWORD;
-    private $serviceId = PMT_SERVICEID;
-    private $action = PMT_GATE;
+    private $password;
+    private $serviceId;
+    private $action;
     private $transactionType = "SALE";
     private $pymtMethod = "ANY";
-    private $merchantReturnUrl = "https://jenho.cms.okhub-tech.com/return";
+    private $merchantReturnUrl;
     private $currencyCode = "MYR";
+
     private $currency_return = [
         'MYR' => 'jenho-malaysia',
         'VND' => 'jenho-viet-nam',
@@ -24,6 +25,14 @@ class PaymentService
         'USD' => 'exchange_to_usd',
         'SGD' => 'exchange_to_singapore',
     ];
+
+    public function __construct()
+    {
+        $this->password = defined('PMT_PASSWORD') ? PMT_PASSWORD : "";
+        $this->serviceId = defined('PMT_SERVICEID') ? PMT_SERVICEID : "";
+        $this->action = defined('PMT_GATE') ? PMT_GATE : "";
+        $this->merchantReturnUrl = site_url('/return');
+    }
 
     public function getPaymentGateway(WP_REST_Request $request, $custIp)
     {
