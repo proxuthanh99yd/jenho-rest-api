@@ -10,16 +10,18 @@ use WP_REST_Request;
 class AuthService
 {
     private $tokenHandler;
-    private $secretKey = AUTH_SECRET_KEY;
-    private $googleClientId = GOOGLE_CLIENT_ID;
-    private $googleClientSecret = GOOGLE_CLIENT_SECRET;
+    private $secretKey;
+    private $googleClientId;
+    private $googleClientSecret;
     /**
      * Constructor initializes the TokenHandler with a secret key.
      */
     public function __construct()
     {
-        $secretKey = $this->secretKey; // Replace with your actual secret key
-        $this->tokenHandler = new TokenHandler($secretKey);
+        $this->secretKey = defined('AUTH_SECRET_KEY') ? AUTH_SECRET_KEY : "";
+        $this->googleClientId = defined('GOOGLE_CLIENT_ID') ? GOOGLE_CLIENT_ID : "";
+        $this->googleClientSecret = defined('GOOGLE_CLIENT_SECRET') ? GOOGLE_CLIENT_SECRET : "";
+        $this->tokenHandler = new TokenHandler($this->secretKey);
     }
 
     /**
