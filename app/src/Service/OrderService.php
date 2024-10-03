@@ -231,7 +231,10 @@ class OrderService
         // Format each order using the formatOrderData method
         $formattedOrders = [];
         foreach ($orders as $order) {
-            $formattedOrders[] = $this->formatOrderData($order, $currency);
+            $orderItem = $this->formatOrderData($order, $currency);
+            if (is_array($orderItem) && count($orderItem) > 0) {
+                $formattedOrders[] = $orderItem;
+            }
         }
 
         // Return the list of formatted orders
