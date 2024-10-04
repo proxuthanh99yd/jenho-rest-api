@@ -143,6 +143,7 @@ class ProductService
         $products['page'] = isset($args['offset']) ? null : intval($query->query_vars['paged']);
         $products['offset'] = isset($args['offset']) ? intval($args['offset']) : null;
         $products['totalPages'] = intval($query->max_num_pages);
+        $products['totalItems'] = intval($query->found_posts);
         $products['limit'] = intval($query->query_vars['posts_per_page']);
         $products['currency'] = $args['currency'] ?? null;
 
