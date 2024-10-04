@@ -85,6 +85,17 @@ class AuthController
             'callback' => array($this, 'getUserInfo'),
             'permission_callback' => array($this, 'bearerTokenAuth')
         ));
+
+        register_rest_route('api/v1', 'upload/avatar', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'uploadAvatar'),
+            'permission_callback' => array($this, 'bearerTokenAuth')
+        ));
+    }
+
+    public function uploadAvatar(WP_REST_Request $request)
+    {
+        return $this->authService->uploadAvatar($request);
     }
 
     /**

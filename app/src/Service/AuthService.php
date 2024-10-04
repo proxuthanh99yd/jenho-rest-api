@@ -171,6 +171,82 @@ class AuthService
         return array('message' => __('Password has been successfully changed.'));
     }
 
+    public function uploadAvatar(WP_REST_Request $request)
+    {
+        $user_id = get_current_user_id(); // Lấy ID người dùng hiện tại
+        if (!$user_id) {
+            return new WP_Error('no_user', 'Người dùng chưa đăng nhập.', array('status' => 401));
+        }
+
+        // Kiểm tra và xử lý file upload
+        if (empty($_FILES['avatar'])) {
+            return new WP_Error('no_file', 'Không có file nào được tải lên.', array('status' => 400));
+        }
+
+        $file = $_FILES['avatar'];
+
+        // Kiểm tra tính hợp lệ của file
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            return new WP_Error('upload_error', 'Lỗi trong quá trình upload file.', array('status' => 500));
+        }
+
+        // Kiểm tra dung lượng file (2MB = 2 * 1024 * 1024 bytes)
+        $max_file_size = 2 * 1024 * 1024;
+        if ($file['size'] > $max_file_size) {
+            return new WP_Error('file_too_large', 'Dung lượng file không được vượt quá 2MB.', array('status' => 400));
+        }
+
+        // Lấy thư mục upload của WordPress
+        $upload_dir = wp_upload_dir();
+        $avatar_dir = $upload_dir['basedir'] . '/avatars';
+
+        // Tạo thư mục avatars nếu chưa có
+        if (!file_exists($avatar_dir)) {
+            wp_mkdir_p($avatar_dir);
+        }
+
+        // Tạo đường dẫn cho file upload
+        $file_name = $file['name'];
+        $file_path = $avatar_dir . '/' . $file_name;
+
+        // Xóa avatar cũ (nếu có)
+        $old_avatar_id = get_user_meta($user_id, 'wp_user_avatar', true);
+        if (!empty($old_avatar_id)) {
+            wp_delete_attachment($old_avatar_id, true); // Xóa attachment cũ và file liên quan
+        }
+
+        // Di chuyển file vào thư mục avatars
+        if (!move_uploaded_file($file['tmp_name'], $file_path)) {
+            return new WP_Error('upload_failed', 'Không thể di chuyển file.', array('status' => 500));
+        }
+
+        // Tạo attachment cho file mới
+        $file_type = wp_check_filetype($file_name);
+        $attachment = array(
+            'guid'           => $upload_dir['baseurl'] . '/avatars/' . $file_name,
+            'post_mime_type' => $file_type['type'],
+            'post_title'     => sanitize_file_name($file_name),
+            'post_content'   => '',
+            'post_status'    => 'inherit'
+        );
+
+        // Insert attachment vào thư viện media
+        $attach_id = wp_insert_attachment($attachment, $file_path, 0);
+
+        // Tạo metadata cho attachment
+        require_once(ABSPATH . 'wp-admin/includes/image.php');
+        $attach_data = wp_generate_attachment_metadata($attach_id, $file_path);
+        wp_update_attachment_metadata($attach_id, $attach_data);
+
+        // Set avatar cho người dùng (lưu ID của attachment vào user meta)
+        update_user_meta($user_id, 'wp_user_avatar', $attach_id);
+
+        return array(
+            'status'  => 'success',
+            'message' => 'Avatar đã được tải lên thành công.',
+            'avatar_url' => wp_get_attachment_url($attach_id)
+        );
+    }
     /**
      * Handles the Google OAuth callback and authenticates the user.
      *
