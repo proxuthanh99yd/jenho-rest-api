@@ -196,6 +196,13 @@ class AuthService
             return new WP_Error('file_too_large', 'Dung lượng file không được vượt quá 2MB.', array('status' => 400));
         }
 
+        // Kiểm tra loại file (chỉ cho phép định dạng ảnh)
+        $allowed_types = array('image/jpeg', 'image/png', 'image/gif');
+        $file_type = wp_check_filetype($file['name']);
+        if (!in_array($file_type['type'], $allowed_types)) {
+            return new WP_Error('invalid_file_type', 'Chỉ cho phép tải lên các định dạng ảnh (jpeg, png, gif).', array('status' => 400));
+        }
+
         // Lấy thư mục upload của WordPress
         $upload_dir = wp_upload_dir();
         $avatar_dir = $upload_dir['basedir'] . '/avatars';
@@ -206,7 +213,7 @@ class AuthService
         }
 
         // Tạo đường dẫn cho file upload
-        $file_name = $file['name'];
+        $file_name = sanitize_file_name($file['name']);
         $file_path = $avatar_dir . '/' . $file_name;
 
         // Xóa avatar cũ (nếu có)
@@ -221,13 +228,12 @@ class AuthService
         }
 
         // Tạo attachment cho file mới
-        $file_type = wp_check_filetype($file_name);
         $attachment = array(
             'guid'           => $upload_dir['baseurl'] . '/avatars/' . $file_name,
             'post_mime_type' => $file_type['type'],
             'post_title'     => sanitize_file_name($file_name),
             'post_content'   => '',
-            'post_status'    => 'inherit'
+            'post_status'    => 'private', // Đặt post_status là private để ẩn ảnh trong thư viện Media
         );
 
         // Insert attachment vào thư viện media
@@ -247,6 +253,7 @@ class AuthService
             'avatar_url' => wp_get_attachment_url($attach_id)
         );
     }
+
     /**
      * Handles the Google OAuth callback and authenticates the user.
      *
