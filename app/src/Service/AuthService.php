@@ -42,6 +42,8 @@ class AuthService
         // Determine whether the input is an email or username and create the user
         if (is_email($emailOrUsername)) {
             $user_id = wp_create_user($emailOrUsername, $password, $emailOrUsername);
+            update_user_meta($user_id, 'billing_email', $emailOrUsername);
+            update_user_meta($user_id, 'shipping_email', $emailOrUsername);
         } else {
             $user_id = wp_create_user($emailOrUsername, $password);
         }
@@ -53,16 +55,15 @@ class AuthService
 
         // Add user meta
         update_user_meta($user_id, 'first_name', $fullName);
+        update_user_meta($user_id, 'billing_first_name', $fullName);
+        update_user_meta($user_id, 'shipping_first_name', $fullName);
 
         // Fetch user meta and generate JWT tokens
-        $usermeta = get_user_meta($user_id);
         $token = $this->tokenHandler->generateTokens($user_id);
 
-        return array(
-            'user_id' => $user_id,
-            'usermeta' => $usermeta,
+        return array_merge($this->getUserInfoById($user_id), [
             'token' => $token
-        );
+        ]);
     }
 
 
@@ -84,8 +85,19 @@ class AuthService
         }
 
         // Generate and return JWT tokens
-        return $this->tokenHandler->generateTokens($user->ID);
+        return array_merge($this->tokenHandler->generateTokens($user->ID), $this->getUserInfoById($user->ID));
     }
+
+    public function updateUser($args)
+    {
+        // Get the current logged-in user
+        $user = wp_get_current_user();
+        foreach ($args as $key => $value) {
+            update_user_meta($user->ID, $key, $value);
+        }
+        return $this->getUserInfoById($user->ID);
+    }
+
 
     /**
      * Initiates the password reset process by sending an email to the user.
@@ -333,24 +345,7 @@ class AuthService
         if (!$user) {
             return new WP_Error('user_not_found', __('User not found'), array('status' => 404));
         }
-
-        // Return the user's information
-        return array(
-            'id' => $user->ID,
-            'username' => $user->user_login,
-            'email' => $user->user_email,
-            'display_name' => $user->display_name,
-            'roles' => $user->roles,
-            'fullName' => get_user_meta($user->ID, 'first_name', true) . ' ' . get_user_meta($user->ID, 'last_name', true),
-            'nationality' => get_user_meta($user->ID, 'wp_user_nationality', true),
-            'day' => wp_date('d', get_user_meta($user->ID, 'wp_user_birthday', true)),
-            'month' =>   wp_date('m', get_user_meta($user->ID, 'wp_user_birthday', true)),
-            'year' => wp_date('Y', get_user_meta($user->ID, 'wp_user_birthday', true)),
-            'gender' => get_user_meta($user->ID, 'wp_user_gender', true),
-            'phone' => get_user_meta($user->ID, 'wp_user_phone', true),
-            'email' => get_user_meta($user->ID, 'wp_user_email', true),
-            'avatar' => get_user_meta($user->ID, 'wp_user_avatar', true)
-        );
+        return $this->getUserInfoById($user->ID);
     }
 
     /**
@@ -379,5 +374,44 @@ class AuthService
             }
         }
         return null; // Return null if authentication fails
+    }
+
+
+    /**
+     * Retrieves the user's information by ID.
+     *
+     * @param int $id User ID
+     * @return array|WP_Error
+     */
+    public function getUserInfoById($id)
+    {
+        $user = get_user_by('ID', $id);
+
+
+        $user_info = [
+            'id' => $user->ID,
+            'username' => $user->user_login,
+            'email' => $user->user_email ?? get_user_meta($user->ID, 'billing_email', true) ?? get_user_meta($user->ID, 'shipping_email', true),
+            'display_name' => $user->display_name,
+            'roles' => $user->roles,
+            'fullName' => get_user_meta($user->ID, 'first_name', true) . ' ' . get_user_meta($user->ID, 'last_name', true) ?? update_user_meta($user->ID, 'billing_first_name', true) ?? get_user_meta($user->ID, 'shipping_first_name', true),
+            'nationality' => get_user_meta($user->ID, 'wp_user_nationality', true),
+            'day' => '',
+            'month' =>   '',
+            'year' => '',
+            'gender' => get_user_meta($user->ID, 'wp_user_gender', true),
+            'phone' => get_user_meta($user->ID, 'billing_phone', true) ?: get_user_meta($user->ID, 'shipping_phone', true),
+            'avatar' => wp_get_attachment_image_url(get_user_meta($user->ID, 'wp_user_avatar', true) ?? '', 'full'),
+        ];
+        $wp_user_birthday =  get_user_meta($user->ID, 'wp_user_birthday', true);
+        if ($wp_user_birthday) {
+            $date = \DateTime::createFromFormat('Ymd', $wp_user_birthday);
+            $user_info['day'] = $date->format('d');
+            $user_info['month'] =   $date->format('m');
+            $user_info['year'] = $date->format('Y');
+        }
+
+        // Return the user's information
+        return $user_info;
     }
 }

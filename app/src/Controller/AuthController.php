@@ -90,6 +90,12 @@ class AuthController
             'permission_callback' => array($this, 'bearerTokenAuth')
         ));
 
+        register_rest_route('api/v1', 'user-info', array(
+            'methods' => 'PATCH',
+            'callback' => array($this, 'updateUser'),
+            'permission_callback' => array($this, 'bearerTokenAuth')
+        ));
+
         register_rest_route('api/v1', 'upload/avatar', array(
             'methods' => 'POST',
             'callback' => array($this, 'uploadAvatar'),
@@ -135,6 +141,50 @@ class AuthController
         }
 
         return new WP_REST_Response($result, 200);
+    }
+
+    public function updateUser(WP_REST_Request $request)
+    {
+
+        $args = [];
+
+        $fullName = $request->get_param('fullName');
+        if ($fullName) {
+            $args['first_name'] = $fullName;
+            $args['billing_first_name'] = $fullName;
+            $args['shipping_first_name'] = $fullName;
+        }
+
+        $phone = $request->get_param('phone');
+        if ($phone) {
+            $args['billing_phone'] = $phone;
+            $args['shipping_phone'] = $phone;
+        }
+
+        $nationality = $request->get_param('nationality');
+        if ($nationality) {
+            $args['wp_user_nationality'] = $nationality;
+        }
+
+        $gender = $request->get_param('gender');
+        if ($gender) {
+            $args['wp_user_gender'] = $gender;
+        }
+
+        $day = $request->get_param('day');
+        $month = $request->get_param('month');
+        $year = $request->get_param('year');
+        if ($day && $month && $year) {
+            $args['wp_user_birthday'] = \DateTime::createFromFormat('Ymd', $year . $month . $day);
+        }
+
+        $oldPassword = $request->get_param('oldPassword');
+        $newPassword = $request->get_param('newPassword');
+        if ($oldPassword &&  $newPassword) {
+            $this->authService->changePassword($oldPassword, $newPassword);
+        }
+
+        return $this->authService->updateUser($args);
     }
 
     /**
