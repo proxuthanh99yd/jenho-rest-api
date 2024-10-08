@@ -65,21 +65,25 @@ class AuthController
             'callback' => array($this, 'refreshToken'),
             'permission_callback' => '__return_true'
         ));
+
         register_rest_route('api/v1', 'google-callback', array(
             'methods' => 'POST',
             'callback' => array($this, 'googleCallback'),
             'permission_callback' => '__return_true'
         ));
+
         register_rest_route('api/v1', 'change-password', array(
             'methods' => 'POST',
             'callback' => array($this, 'changePassword'),
             'permission_callback' => '__return_true'
         ));
+
         register_rest_route('api/v1', 'reset-password', array(
             'methods' => 'POST',
             'callback' => array($this, 'resetPassword'),
             'permission_callback' => '__return_true'
         ));
+
         register_rest_route('api/v1', 'user-info', array(
             'methods' => 'GET',
             'callback' => array($this, 'getUserInfo'),

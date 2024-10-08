@@ -341,7 +341,15 @@ class AuthService
             'email' => $user->user_email,
             'display_name' => $user->display_name,
             'roles' => $user->roles,
-            'meta' => get_user_meta($user->ID) // Retrieves user meta information
+            'fullName' => get_user_meta($user->ID, 'first_name', true) . ' ' . get_user_meta($user->ID, 'last_name', true),
+            'nationality' => get_user_meta($user->ID, 'wp_user_nationality', true),
+            'day' => wp_date('d', get_user_meta($user->ID, 'wp_user_birthday', true)),
+            'month' =>   wp_date('m', get_user_meta($user->ID, 'wp_user_birthday', true)),
+            'year' => wp_date('Y', get_user_meta($user->ID, 'wp_user_birthday', true)),
+            'gender' => get_user_meta($user->ID, 'wp_user_gender', true),
+            'phone' => get_user_meta($user->ID, 'wp_user_phone', true),
+            'email' => get_user_meta($user->ID, 'wp_user_email', true),
+            'avatar' => get_user_meta($user->ID, 'wp_user_avatar', true)
         );
     }
 
