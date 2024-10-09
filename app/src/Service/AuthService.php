@@ -157,7 +157,7 @@ class AuthService
      * @param string $newPassword New password
      * @return array|WP_Error
      */
-    public function changePassword($currentPassword, $newPassword)
+    public function changePassword($currentPassword = null, $newPassword)
     {
         // Get the current logged-in user
         $user = wp_get_current_user();
@@ -168,7 +168,7 @@ class AuthService
         }
 
         // Verify the current password
-        if (!wp_check_password($currentPassword, $user->user_pass, $user->ID)) {
+        if ($currentPassword && !wp_check_password($currentPassword, $user->user_pass, $user->ID)) {
             return new WP_Error('incorrect_password', __('Current password is incorrect'), array('status' => 400));
         }
 
@@ -406,6 +406,7 @@ class AuthService
         $wp_user_birthday =  get_user_meta($user->ID, 'wp_user_birthday', true);
         if ($wp_user_birthday) {
             $date = \DateTime::createFromFormat('Ymd', $wp_user_birthday);
+            // return $date;
             $user_info['day'] = $date->format('d');
             $user_info['month'] =   $date->format('m');
             $user_info['year'] = $date->format('Y');

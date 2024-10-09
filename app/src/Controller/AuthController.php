@@ -175,13 +175,20 @@ class AuthController
         $month = $request->get_param('month');
         $year = $request->get_param('year');
         if ($day && $month && $year) {
-            $args['wp_user_birthday'] = \DateTime::createFromFormat('Ymd', $year . $month . $day);
+            $args['wp_user_birthday'] =  $year . $month . $day;
         }
 
-        $oldPassword = $request->get_param('oldPassword');
-        $newPassword = $request->get_param('newPassword');
-        if ($oldPassword &&  $newPassword) {
-            $this->authService->changePassword($oldPassword, $newPassword);
+        $confirm_password = $request->get_param('confirm_password');
+        $new_password = $request->get_param('new_password');
+
+        if ($confirm_password &&  $new_password) {
+            if ($confirm_password !== $new_password) {
+                return new \WP_Error('invalid_password', 'Passwords do not match', array('status' => 400));
+            }
+            $res = $this->authService->changePassword(null, $new_password);
+            if (is_wp_error($res)) {
+                return  $res;
+            }
         }
 
         return $this->authService->updateUser($args);
