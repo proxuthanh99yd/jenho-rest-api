@@ -94,12 +94,12 @@ class WishlistController extends WP_REST_Controller
     }
 
     // // Tạo wishlist mới
-    public function add_to_wishlist(WP_REST_Request $request, $currency)
+    public function add_to_wishlist(WP_REST_Request $request)
     {
         $product_id = $request->get_param('product_id');
         $variation_id = $request->get_param('variation_id');
         $quantity = $request->get_param('quantity');
-
+        $currency = $request->get_param('currency');
         if (!$product_id || !($variation_id >= 0)  || !$quantity) {
             return new WP_Error('missing_params', 'Missing required parameters', ['status' => 400]);
         }
